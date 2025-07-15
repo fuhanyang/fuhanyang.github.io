@@ -14,6 +14,8 @@
 
 
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
@@ -112,7 +114,22 @@
   <ul id="menu" class="main-menu menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+    <a href="/home/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-book-open">
+
+    <a href="/" rel="section"><i class="fa fa-book-open fa-fw"></i>概览</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
@@ -172,7 +189,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2025-07-15 00:00:00 / 修改时间：16:04:44" itemprop="dateCreated datePublished" datetime="2025-07-15T00:00:00+08:00">2025-07-15</time>
+              <time title="创建时间：2025-07-15 00:00:00 / 修改时间：18:11:13" itemprop="dateCreated datePublished" datetime="2025-07-15T00:00:00+08:00">2025-07-15</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -199,111 +216,14 @@
 <h1 id="GoChat-聊天系统项目总览"><a href="#GoChat-聊天系统项目总览" class="headerlink" title="GoChat 聊天系统项目总览"></a>GoChat 聊天系统项目总览</h1><blockquote>
 <p>本文是 GoChat 聊天系统系列博客的第一篇，主要聚焦于项目的整体架构设计与技术选型。后续将针对各个核心模块（如 WebSocket 通信、微服务拆分、消息队列解耦、服务注册与发现等）分别撰写详细专题，欢迎持续关注！</p>
 </blockquote>
-<h2 id="一、项目简介"><a href="#一、项目简介" class="headerlink" title="一、项目简介"></a>一、项目简介</h2><p>GoChat 项目的起点其实很简单：我最初完成了一个能实现基本聊天功能的 version1.0。这个版本虽然能用，但随着时间推移，我发现它太过简陋，架构上也有不少不妥之处，难以满足更高的并发和扩展需求。</p>
-<p>因此，我决定对项目进行彻底重构，着手开发 version2.0。在新版本中，我希望不仅能完善功能，还能应用更多现代技术和更合理的架构设计。</p>
-<p>在这个过程中，我不断学习和调研，逐步确定了合适的技术栈：后端采用 Go 语言，服务间通信选择了高效的 gRPC，服务注册与发现用 etcd，消息解耦和异步处理则引入了 RabbitMQ，数据存储和缓存分别用 MySQL 和 Redis。前端则用原生 JavaScript，方便灵活地实现 WebSocket 通信和用户交互。</p>
-<p>整个项目的架构和功能都是一步步搭建和完善起来的：从最初的单体服务，到服务拆分、消息队列引入、再到 WebSocket 微服务独立化，每一步都伴随着技术选型、架构调整和大量的实践探索。最终，GoChat 实现了多用户实时聊天、断线重连、消息去重、踢人下线等主要功能，也让我在分布式系统和高并发编程方面有了更深刻的理解和成长。</p>
-<p><strong>主要功能：</strong></p>
-<ul>
-<li>多用户实时聊天</li>
-<li>WebSocket 断线重连</li>
-<li>消息去重与缓存</li>
-<li>多端登录检测与踢人下线</li>
-<li>消息异步处理与可靠投递</li>
-</ul>
-<p><strong>技术栈：</strong></p>
-<ul>
-<li>后端：Go、gRPC、RabbitMQ、Redis、MySQL</li>
-<li>前端：原生 JavaScript</li>
-<li>通信协议：WebSocket、gRPC</li>
-</ul>
-<hr>
-<h2 id="二、系统架构与模块划分"><a href="#二、系统架构与模块划分" class="headerlink" title="二、系统架构与模块划分"></a>二、系统架构与模块划分</h2><p>在设计 GoChat 的整体架构时，我希望它既能应对高并发场景，又具备良好的扩展性和解耦能力。因此，我采用了如下分层分布式架构：</p>
-<h3 id="1-API-网关层"><a href="#1-API-网关层" class="headerlink" title="1. API 网关层"></a>1. API 网关层</h3><p>这是对外暴露的唯一入口，负责接收前端的 HTTP&#x2F;WebSocket 请求、用户认证和权限校验等。API 层会将用户的操作请求封装成消息，异步投递到消息队列（RabbitMQ），实现流量削峰和服务解耦。对于实时通信，API 层还负责为用户分发 WebSocket 微服务的连接 URL。</p>
-<ul>
-<li><strong>鉴权与限流</strong>：API 层通过 JWT 对用户请求进行鉴权，结合令牌桶中间件和本地+Redis双层结构进行接口限流，防止恶意请求和流量突发。</li>
-<li><strong>唯一性校验</strong>：通过布隆过滤器中间件高效校验用户名唯一性，提升高并发下的校验效率。</li>
-</ul>
-<h3 id="2-WebSocket-微服务"><a href="#2-WebSocket-微服务" class="headerlink" title="2. WebSocket 微服务"></a>2. WebSocket 微服务</h3><p>WebSocket 微服务专门负责维护客户端的长连接，处理实时消息的收发和下发。用户在通过 API 层认证后，会获得一个 WebSocket 服务的连接地址，然后直接与 WebSocket 微服务建立长连接。</p>
-<ul>
-<li><strong>连接流程</strong>：<ol>
-<li>客户端首先访问 API 层接口，完成认证。</li>
-<li>API 层返回 WebSocket 微服务的连接 URL（带有临时 token）。</li>
-<li>客户端用该 URL 建立 WebSocket 长连接。</li>
-</ol>
-</li>
-<li><strong>消息处理协作</strong>：<ul>
-<li>当用户通过 WebSocket 发送消息时，WebSocket 微服务会校验消息，并<strong>立即推送给目标用户，同时进行消息持久化</strong>，保证消息的实时性和可靠性。</li>
-<li>通过 Redis 维护连接信息，结合 RabbitMQ 实现分布式部署下的消息统一分发，保障不同服务端间的用户通信。</li>
-</ul>
-</li>
-</ul>
-<p>这种设计让 WebSocket 微服务专注于连接和实时性，消息微服务专注于数据可靠性和业务逻辑，职责清晰，易于扩展。</p>
-<h3 id="3-消息队列层（RabbitMQ）"><a href="#3-消息队列层（RabbitMQ）" class="headerlink" title="3. 消息队列层（RabbitMQ）"></a>3. 消息队列层（RabbitMQ）</h3><p>RabbitMQ 作为核心的消息中间件，承担着系统“缓冲区”和“调度中心”的角色。API 层把用户请求作为消息发送到 MQ，后端有专门的消费者服务监听并消费这些消息，实现异步处理和服务解耦。</p>
-<ul>
-<li><strong>高效调用</strong>：MQ 消费者服务在处理消息时，利用 Go 的反射机制动态调用对应的微服务方法，极大减少了代码复杂度，提高了系统的灵活性和可维护性。</li>
-</ul>
-<h3 id="4-微服务层（gRPC-etcd）"><a href="#4-微服务层（gRPC-etcd）" class="headerlink" title="4. 微服务层（gRPC + etcd）"></a>4. 微服务层（gRPC + etcd）</h3><p>后端的业务逻辑被拆分为多个微服务（如用户、消息、好友等），每个服务都通过 gRPC 提供高效的远程调用接口。所有微服务启动时会自动向 etcd 注册自己的地址，实现服务注册与发现、负载均衡和故障转移。</p>
-<ul>
-<li><strong>消息微服务</strong>：负责消息的持久化、历史记录、消息查询等，采用合理的分片键进行水平分表，提升查询效率。</li>
-<li><strong>用户&#x2F;好友微服务</strong>：负责用户注册、登录、好友管理等。</li>
-</ul>
-<h3 id="5-基础设施层（MySQL、Redis等）"><a href="#5-基础设施层（MySQL、Redis等）" class="headerlink" title="5. 基础设施层（MySQL、Redis等）"></a>5. 基础设施层（MySQL、Redis等）</h3><p>所有服务共享底层的数据库和缓存，用于数据持久化和高效访问。</p>
-<ul>
-<li><strong>MySQL</strong>：存储用户信息、消息内容、好友关系等核心数据，消息表采用分片键进行水平分表。</li>
-<li><strong>Redis</strong>：缓存用户会话、在线状态、热点数据等，采用分布式锁保障用户登录唯一性，并用 list 结构快速查询消息。</li>
-</ul>
-<h3 id="架构设计思考"><a href="#架构设计思考" class="headerlink" title="架构设计思考"></a>架构设计思考</h3><ul>
-<li><strong>WebSocket 微服务独立化</strong>：让连接管理和消息推送弹性扩展，避免单点瓶颈。</li>
-<li><strong>gRPC+etcd 服务治理</strong>：高效通信、自动注册发现，适合微服务动态扩缩容。</li>
-<li><strong>RabbitMQ 异步解耦</strong>：天然流量削峰，提升系统弹性和可维护性。</li>
-<li><strong>分层解耦，职责单一</strong>：每一层专注自身领域，便于后续横向扩展和服务治理。</li>
-<li><strong>多层安全与流控</strong>：JWT 鉴权、布隆过滤器唯一性校验、令牌桶限流、分布式锁等多重保障系统安全与稳定。</li>
-</ul>
-<h3 id="系统架构图"><a href="#系统架构图" class="headerlink" title="系统架构图"></a>系统架构图</h3><pre class="mermaid">graph TD
-  A[前端/用户] -- HTTP/WebSocket --> B[API 网关]
-  B -- 获取WS连接URL --> A
-  A -- 连接 --> W[WebSocket微服务]
-  W -- gRPC持久化消息 --> F2[消息微服务]
-  B -- 消息投递 --> D[RabbitMQ]
-  D -- 消费消息 --> E[消息消费者服务]
-  E -- gRPC --> F1[用户微服务]
-  E -- gRPC --> F2
-  E -- gRPC --> F3[好友微服务]
-  F1 -- etcd 注册/发现 --> G[etcd]
-  F2 -- etcd 注册/发现 --> G
-  F3 -- etcd 注册/发现 --> G
-  W -- etcd 注册/发现 --> G
-  W -- 消息下发 --> A
-  F1 -- MySQL/Redis --> H[存储]
-  F2 -- MySQL/Redis --> H
-  F3 -- MySQL/Redis --> H</pre>
-
-<hr>
-<p>通过这样的架构设计，GoChat 能够高效地支持大规模用户的实时通信需求，同时具备良好的可维护性和扩展性。无论是消息的可靠存储、实时推送，还是服务的弹性扩容，都能灵活应对业务增长和技术演进。</p>
-<h2 id="三、后续专题预告"><a href="#三、后续专题预告" class="headerlink" title="三、后续专题预告"></a>三、后续专题预告</h2><p>由于 GoChat 项目功能丰富、架构复杂，一篇博客难以面面俱到。后续我会针对以下专题分别撰写详细文章：</p>
-<ul>
-<li>WebSocket 多用户实时通信与断线重连机制</li>
-<li>微服务拆分与 gRPC 通信实践</li>
-<li>RabbitMQ 消息解耦与异步处理</li>
-<li>etcd 服务注册与发现的实现</li>
-<li>业务模块设计与扩展性思考</li>
-<li>性能优化与高可用实践</li>
-</ul>
-<p>欢迎持续关注 GoChat 系列博客，和我一起深入探索分布式聊天系统的设计与实现！ </p>
-<h3 id="自研基础组件与工程实践"><a href="#自研基础组件与工程实践" class="headerlink" title="自研基础组件与工程实践"></a>自研基础组件与工程实践</h3><p>在 GoChat 的开发过程中，除了集成主流中间件和微服务框架，我还动手实现了一些关键的基础组件，进一步提升了系统的性能和可维护性：</p>
-<ul>
-<li><p><strong>自研协程池 routinePool（借鉴 ants）</strong><br>为了高效地处理高并发下的任务调度和资源复用，我参考了 ants 的设计思想，实现了名为 routinePool 的简易协程池组件。这样可以有效避免频繁创建和销毁 goroutine 带来的性能损耗，提升了系统的吞吐量和资源利用率。</p>
-</li>
-<li><p><strong>责任链式中间件机制（借鉴 gin）</strong><br>在 API 层和部分微服务内部，我实现了类似 gin 框架的责任链式调用机制（MyHandlerFunc）。这样每个中间件只关注自己的职责，多个中间件可以灵活组合、按需插拔，极大提升了代码的可读性和可维护性。例如，鉴权、限流、日志、参数校验等都可以作为独立的中间件链式调用。</p>
-</li>
-<li><p><strong>自研布隆过滤器</strong><br>为了在高并发场景下高效校验用户名等唯一性，我实现了自研布隆过滤器组件。相比传统查库校验，布隆过滤器能大幅减少数据库压力，提升系统性能和健壮性，尤其适合大规模用户注册、唯一性校验等场景。</p>
-</li>
-<li><p><strong>日志记录与配置管理</strong><br>项目日志系统采用高性能的 zap 包，支持结构化日志输出，便于后期排查问题和系统可观测性。配置管理则采用 viper 包，支持多环境配置热加载和灵活的参数管理，极大提升了项目的可维护性和部署灵活性。</p>
-</li>
-</ul>
-<p>这些自研“轮子”与工程实践不仅让项目更贴合实际业务需求，也锻炼了我对 Go 语言并发模型和高可用架构的理解与实践能力。 </p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/07/15/GoChat/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -353,7 +273,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-07-15 14:22:51" itemprop="dateModified" datetime="2025-07-15T14:22:51+08:00">2025-07-15</time>
+                <time title="修改时间：2025-07-15 18:14:18" itemprop="dateModified" datetime="2025-07-15T18:14:18+08:00">2025-07-15</time>
               </span>
 
           
@@ -368,259 +288,16 @@
 
       
           <hr>
-<h1 id="Let‘s-Go"><a href="#Let‘s-Go" class="headerlink" title="Let‘s Go"></a>Let‘s Go</h1><h2 id="Go基础"><a href="#Go基础" class="headerlink" title="Go基础"></a>Go基础</h2><ul>
-<li><p>反转链表</p>
-<ul>
-<li><pre><code class="go">/**
- * Definition for singly-linked list.
- * type ListNode struct &#123;
- *     Val int
- *     Next *ListNode
- * &#125;
- */
-
-package main
-
-import (
-    &quot;fmt&quot;
-)
-
-func reverseList(head *ListNode) *ListNode &#123;
-    if head == nil || head.Next == nil &#123;
-        return nil
-    &#125;
-    p := head.Next
-    last := head.Next
-    head.Next = nil
-    for last != nil &#123;
-        last = last.Next
-        p.Next = head
-        head = p
-        if last == nil &#123;
-            break
-        &#125;
-        p = last
-    &#125;
-    return p
-&#125;//这是在leetcode的代码
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- ```go</span><br><span class="line">  package main</span><br><span class="line">  </span><br><span class="line">  import (</span><br><span class="line">  	&quot;fmt&quot;</span><br><span class="line">  )</span><br><span class="line">  </span><br><span class="line">  type ListNode struct &#123;</span><br><span class="line">  	Val  int</span><br><span class="line">  	Next *ListNode</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  func reverseList(head *ListNode) *ListNode &#123;</span><br><span class="line">  	var data int</span><br><span class="line">  	fmt.Scanln(&amp;data)</span><br><span class="line">  	head = &amp;ListNode&#123;Val: data, Next: nil&#125;</span><br><span class="line">  	LastNode := head</span><br><span class="line">  	for &#123;</span><br><span class="line">  		_, err := fmt.Scanln(&amp;data)</span><br><span class="line">  		if err != nil &#123;</span><br><span class="line">  			fmt.Println(&quot;错误&quot;)</span><br><span class="line">  			break</span><br><span class="line">  		&#125;</span><br><span class="line">  		NewNode := &amp;ListNode&#123;Val: data, Next: nil&#125;</span><br><span class="line">  		LastNode.Next = NewNode</span><br><span class="line">  		LastNode = NewNode</span><br><span class="line">  	&#125;</span><br><span class="line">  	if head == nil || head.Next == nil &#123;</span><br><span class="line">  		return nil</span><br><span class="line">  	&#125;</span><br><span class="line">  	p := head.Next</span><br><span class="line">  	last := head.Next</span><br><span class="line">  	head.Next = nil</span><br><span class="line">  	for last != nil &#123;</span><br><span class="line">  		last = last.Next</span><br><span class="line">  		p.Next = head</span><br><span class="line">  		head = p</span><br><span class="line">  		if last == nil &#123;</span><br><span class="line">  			break</span><br><span class="line">  		&#125;</span><br><span class="line">  		p = last</span><br><span class="line">  	&#125;</span><br><span class="line">  	return p</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  func main() &#123;</span><br><span class="line">  	var head *ListNode = nil</span><br><span class="line">  	p := reverseList(head)</span><br><span class="line">  	for p != nil &#123;</span><br><span class="line">  		fmt.Println(p.Val)</span><br><span class="line">  		p = p.Next</span><br><span class="line">  	&#125;</span><br><span class="line">  &#125;//这是自己的完整代码</span><br></pre></td></tr></table></figure>
-</code></pre>
-</li>
-</ul>
-</li>
-<li><p>螺旋数组</p>
-<ul>
-<li><pre><code class="go">package main
-
-import &quot;fmt&quot;
-
-func PutNum(matrix [][]int, n int, floor int) &#123;//floor为递归第几层，
-    //相当于第几个环，n为宽度
-    if n &lt;= 0 &#123;
-        return
-    &#125;
-    for i := 0; i &lt; n; i++ &#123;
-        if floor == 1 &amp;&amp; i == 0 &#123;
-            matrix[0][0] = 1
-        &#125; else &#123;
-            matrix[floor-1][floor+i-1] = matrix[floor-1][floor+i-2] + 1
-        &#125;
-    &#125;
-    for i := 1; i &lt;= n-1; i++ &#123;
-        if n &gt; 1 &#123;
-            matrix[floor+i-1][floor+n-2] = matrix[floor+i-2][floor+n-2] + 1
-        &#125;
-    &#125;
-    for i := 1; i &lt;= n-1; i++ &#123;
-        matrix[floor+n-2][floor+n-2-i] = matrix[floor+n-2][floor+n-i-1] + 1
-    &#125;
-    for i := 1; i &lt;= n-2; i++ &#123;
-        matrix[floor+n-2-i][floor-1] = matrix[floor+n-i-1][floor-1] + 1
-    &#125;
-    PutNum(matrix, n-2, floor+1)
-&#125;
-func generateMatrix(n int) [][]int &#123;
-    matrix := make([][]int, n)
-    for i := 0; i &lt; n; i++ &#123;
-        matrix[i] = make([]int, n)
-    &#125;
-    PutNum(matrix, n, 1)
-    return matrix
-&#125;//想用递归实现,写的有些草率和难看，但通过了数据测试
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- 逆波兰表达式</span><br><span class="line"></span><br><span class="line">  - ```go</span><br><span class="line">    package main</span><br><span class="line">    </span><br><span class="line">    import (</span><br><span class="line">    	&quot;fmt&quot;</span><br><span class="line">    	&quot;strconv&quot;</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    func evalRPN(tokens []string) int &#123;</span><br><span class="line">    	var StackNum [100]int</span><br><span class="line">    	var top int = 10</span><br><span class="line">    	var ascll int</span><br><span class="line">    	for i := 0; i &lt; len(tokens); i++ &#123;</span><br><span class="line">    		_, err := strconv.Atoi(tokens[i])</span><br><span class="line">    		if err != nil &#123;//如果是运算符而不是数字就进行运算</span><br><span class="line">    			ascll = int(tokens[i][0])</span><br><span class="line">    			switch ascll &#123;</span><br><span class="line">    			case 43:</span><br><span class="line">    				StackNum[top-1] = StackNum[top] + StackNum[top-1]</span><br><span class="line">    				top--</span><br><span class="line">    				fmt.Println(StackNum[top])</span><br><span class="line">    			case 45:</span><br><span class="line">    				StackNum[top-1] = StackNum[top] - StackNum[top-1]</span><br><span class="line">    				top--</span><br><span class="line">    				fmt.Println(StackNum[top])</span><br><span class="line">    			case 47:</span><br><span class="line">    				StackNum[top-1] = StackNum[top-1] / StackNum[top]</span><br><span class="line">    				top--</span><br><span class="line">    				fmt.Println(StackNum[top])</span><br><span class="line">    			case 42:</span><br><span class="line">    				StackNum[top-1] = StackNum[top] * StackNum[top-1]</span><br><span class="line">    				top--</span><br><span class="line">    				fmt.Println(StackNum[top])</span><br><span class="line">    			&#125;</span><br><span class="line">    		&#125; else &#123;//数字入栈</span><br><span class="line">    			top++</span><br><span class="line">    			StackNum[top], _ = strconv.Atoi(tokens[i])</span><br><span class="line">    		&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	return StackNum[11]</span><br><span class="line">    &#125;//用栈实现，不知道为什么定义top=-1会越界，所以让top取大一些</span><br></pre></td></tr></table></figure>
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="Go项目"><a href="#Go项目" class="headerlink" title="Go项目"></a>Go项目</h2><ul>
-<li><p>Task1:</p>
-<ul>
-<li><p>A.命令行参数</p>
-<ul>
-<li><pre><code class="go">package main
-
-import (
-    &quot;flag&quot;
-    &quot;fmt&quot;
-)
-
-var infile *string = flag.String(&quot;i&quot;, &quot;infile&quot;, &quot;File contains values for sorting&quot;)
-var outfile *string = flag.String(&quot;o&quot;, &quot;outfile&quot;, &quot;File to receive sorted values&quot;)
-var algorithm *string = flag.String(&quot;a&quot;, &quot;qsort&quot;, &quot;Sort algorithm&quot;)
-
-func main() &#123;
-    flag.Parse()
-
-    if infile != nil &#123;
-        fmt.Println(&quot;infile =&quot;, *infile, &quot;outfile =&quot;, *outfile, &quot;algorithm = &quot;, *algorithm)
-    &#125;
-&#125;
-//flag包用来解析命令行参数
-//在cmd的main目录下go run main.go 然后依次输入-i ...  -o ...  -a ... 就会获得相应参数并打印
-//例如我在main目录下输入go run main.go -i &quot;D:\test\test100\input.txt&quot; -o &quot;D:\test\test100\output.txt&quot; -a bubble
-//输出为infile = D:\test\test100\input.txt outfile = D:\test\test100\output.txt algorithm =  bubble
-//其中-i 用于指定输入文件名-o 用于指定输出文件名-a 用于指定排序算法
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">  </span><br><span class="line">- Go build会编译源代码生成可执行文件并保存，而Go run会编译并执行程序但不生成可执行文件，而是在内存中直接编译并运行。</span><br><span class="line"></span><br><span class="line">- 实现报错</span><br><span class="line"></span><br><span class="line">  ```go </span><br><span class="line">  package main</span><br><span class="line">  </span><br><span class="line">  import (</span><br><span class="line">  	&quot;flag&quot;</span><br><span class="line">  	&quot;fmt&quot;</span><br><span class="line">  	&quot;os&quot;</span><br><span class="line">  )</span><br><span class="line">  </span><br><span class="line">  var infile *string = flag.String(&quot;i&quot;, &quot;infile&quot;, &quot;File contains values for sorting&quot;)</span><br><span class="line">  var outfile *string = flag.String(&quot;o&quot;, &quot;outfile&quot;, &quot;File to receive sorted values&quot;)</span><br><span class="line">  var algorithm *string = flag.String(&quot;a&quot;, &quot;qsort&quot;, &quot;Sort algorithm&quot;)</span><br><span class="line">  </span><br><span class="line">  func main() &#123;</span><br><span class="line">  	flag.Parse()</span><br><span class="line">  </span><br><span class="line">  	if flag.NFlag() == 0 &#123;</span><br><span class="line">  		flag.PrintDefaults()</span><br><span class="line">  		os.Exit(1)</span><br><span class="line">  	&#125;//命令行没参数，打印默认参数</span><br><span class="line">  </span><br><span class="line">  	if *algorithm != &quot;qsort&quot; &amp;&amp; *algorithm != &quot;bubblesort&quot; &#123;</span><br><span class="line">  		fmt.Println(&quot;Error: Unsupported sorting algorithm&quot;)</span><br><span class="line">  		os.Exit(1)</span><br><span class="line">  	&#125;</span><br><span class="line">  </span><br><span class="line">  	fmt.Println(&quot;infile =&quot;, *infile, &quot;outfile =&quot;, *outfile, &quot;algorithm =&quot;, *algorithm)</span><br><span class="line">  &#125;</span><br><span class="line">  //引入os包实现错误时的程序退出文件读写操作在后面主函数处</span><br></pre></td></tr></table></figure>
-</code></pre>
-</li>
-<li><p>文件读写在后面主函数实现</p>
-</li>
-<li><p>defer会创建一个栈，把语句放入其中，当函数结束后会执行这个栈的语句，能方便释放资源</p>
-</li>
-<li><p>切片和数组是什么</p>
-<ol>
-<li><p>数组是一种顺序储存的数据结构，它有固定长度，在声明的时候就要指定</p>
-</li>
-<li><p>切片是对底层数组的一个引用，是一个动态长度的数据结构，可以增删切片元素</p>
-</li>
-</ol>
-</li>
-<li><p>函数返回值是什么，有名和匿名区别，return和c区别</p>
-<ol>
-<li><p>返回值就是函数执行完成后所返回的变量值</p>
-</li>
-<li><p>有名返回值可以在函数内使用而不用声明，且return是可以不用再写返回的变量名称，而匿名的不行</p>
-</li>
-<li><p>golang的return可返回多个值，返回值也可分为匿名返回值和有名（具名）返回值，还可以额外返回error来判断函数是否执行成功</p>
-</li>
-</ol>
-</li>
-<li><p>c语言指针和go指针区别</p>
-<ol>
-<li><p>c语言指针常初始化为null，而go是nil</p>
-</li>
-<li><p>c语言指针可以进行一定算数操作，但也易形成野指针，而go没有</p>
-</li>
-<li><p>go有逃逸分析来确定变量生命周期和内存分配位置，c没有</p>
-</li>
-</ol>
-</li>
-<li><p>变量生命周期</p>
-<ol>
-<li><p>在Go语言中，变量的生命周期由它的作用域（scope）决定。变量的作用域是指变量在程序中可以被访问的范围。在Go语言中，变量的生命周期从它被声明的地方开始，直到它不再被引用为止。当一个变量不再被引用时，它会被Go的垃圾回收机制自动回收，释放相关的内存空间。</p>
-<p>例如，在一个函数内部声明的局部变量的生命周期在函数执行期间，当函数执行完毕时，这些局部变量就会被销毁。全局变量的生命周期是整个程序的运行期间，它在程序启动时被创建，在程序结束时被销毁。</p>
-</li>
-<li><p>在C语言中，变量的生命周期由它的作用域和存储类别（storage class）决定。C语言中的变量可以有不同的存储类别，包括自动变量（auto）、静态变量（static）、寄存器变量（register）、外部变量（extern）等。不同的存储类别决定了变量的生命周期和可见性。是程序员自己分配和决定的</p>
-</li>
-</ol>
-</li>
-<li><p>Qsort</p>
-</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> qsort</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Qsort</span><span class="params">(values []<span class="type">int</span>, left <span class="type">int</span>, right <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	lp := left</span><br><span class="line">	rp := right</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">if</span> err := <span class="built_in">recover</span>(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			fmt.Println(err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()<span class="comment">//如果出现问题捕获错误</span></span><br><span class="line">	<span class="keyword">var</span> MidNum <span class="type">int</span> = values[(lp+rp)/<span class="number">2</span>]</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> values[lp] &gt;= MidNum &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			lp++</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> values[rp] &lt;= MidNum &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			rp--</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> lp &lt;= rp &#123;</span><br><span class="line">			values[lp], values[rp] = values[rp], values[lp]</span><br><span class="line">			lp++</span><br><span class="line">			rp--</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> lp &gt; rp &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> lp &lt; right &#123;</span><br><span class="line">		Qsort(values, lp, right)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> rp &gt; left &#123;</span><br><span class="line">		Qsort(values, left, rp)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> qsort</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;testing&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestQsort1</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	values := []<span class="type">int</span>&#123;<span class="number">9</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">7</span>&#125;</span><br><span class="line">	Qsort(values, <span class="number">0</span>, (<span class="built_in">len</span>(values) - <span class="number">1</span>))</span><br><span class="line">	<span class="keyword">if</span> values[<span class="number">0</span>] != <span class="number">1</span> || values[<span class="number">1</span>] != <span class="number">2</span> || values[<span class="number">2</span>] != <span class="number">3</span> || values[<span class="number">3</span>] != <span class="number">4</span> ||</span><br><span class="line">		values[<span class="number">4</span>] != <span class="number">5</span> || values[<span class="number">5</span>] != <span class="number">6</span> || values[<span class="number">6</span>] != <span class="number">7</span> || values[<span class="number">7</span>] != <span class="number">9</span> &#123;</span><br><span class="line">		t.Error(<span class="string">&quot;Qsort failed Got&quot;</span>, values, <span class="string">&quot;Expected 1 2 3 4 5 6 7 9&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestQsort2</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	values := []<span class="type">int</span>&#123;<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">5</span>, <span class="number">4</span>&#125;</span><br><span class="line">	Qsort(values, <span class="number">0</span>, <span class="built_in">len</span>(values)<span class="number">-1</span>)</span><br><span class="line">	<span class="keyword">if</span> values[<span class="number">0</span>] != <span class="number">1</span> || values[<span class="number">1</span>] != <span class="number">2</span> || values[<span class="number">2</span>] != <span class="number">3</span> || values[<span class="number">3</span>] != <span class="number">4</span> ||</span><br><span class="line">		values[<span class="number">4</span>] != <span class="number">5</span> &#123;</span><br><span class="line">		t.Error(<span class="string">&quot;Qsort failed Got&quot;</span>, values, <span class="string">&quot;Expected 1 2 3 4 5&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestQsort3</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	values := []<span class="type">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">6</span>, <span class="number">8</span>&#125;</span><br><span class="line">	Qsort(values, <span class="number">0</span>, <span class="built_in">len</span>(values)<span class="number">-1</span>)</span><br><span class="line">	<span class="keyword">if</span> values[<span class="number">0</span>] != <span class="number">1</span> || values[<span class="number">1</span>] != <span class="number">2</span> || values[<span class="number">2</span>] != <span class="number">3</span> || values[<span class="number">3</span>] != <span class="number">4</span> ||</span><br><span class="line">		values[<span class="number">4</span>] != <span class="number">5</span> || values[<span class="number">5</span>] != <span class="number">6</span> || values[<span class="number">6</span>] != <span class="number">7</span> || values[<span class="number">7</span>] != <span class="number">8</span> &#123;</span><br><span class="line">		t.Error(<span class="string">&quot;Qsort failed Got&quot;</span>, values, <span class="string">&quot;Expected 1 2 3 4 5 6 7 8&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>主程序<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;bufio&quot;</span></span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;flag&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">	<span class="string">&quot;strconv&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;main.com/algorithms/bubblesort&quot;</span></span><br><span class="line">	<span class="string">&quot;main.com/algorithms/qsort&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> infile *<span class="type">string</span> = flag.String(<span class="string">&quot;i&quot;</span>, <span class="string">&quot;infile&quot;</span>, <span class="string">&quot;File contains values for sorting&quot;</span>)</span><br><span class="line"><span class="keyword">var</span> outfile *<span class="type">string</span> = flag.String(<span class="string">&quot;o&quot;</span>, <span class="string">&quot;outfile&quot;</span>, <span class="string">&quot;File to receive sorted values&quot;</span>)</span><br><span class="line"><span class="keyword">var</span> algorithm *<span class="type">string</span> = flag.String(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;qsort&quot;</span>, <span class="string">&quot;Sort algorithm&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">readValues</span><span class="params">(infile <span class="type">string</span>)</span></span> (values []<span class="type">int</span>, err <span class="type">error</span>) &#123;</span><br><span class="line">	file, err := os.Open(infile)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;无法打开文件&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> file.Close()</span><br><span class="line">	scanner := bufio.NewScanner(file)</span><br><span class="line">	<span class="keyword">var</span> i <span class="type">int</span> = <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> scanner.Scan() &#123;</span><br><span class="line">		strnum := scanner.Text()</span><br><span class="line">		Num, _ := strconv.Atoi(strnum)</span><br><span class="line">		values = <span class="built_in">append</span>(values, Num)</span><br><span class="line">		fmt.Println(values[i], i)<span class="comment">//显示读到的值和位次</span></span><br><span class="line">		i++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> values, err</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">writeValues</span><span class="params">(values []<span class="type">int</span>, outfile <span class="type">string</span>)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">	file, err := os.OpenFile(outfile, os.O_WRONLY, <span class="number">0666</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;无法打开结果文件&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> file.Close()</span><br><span class="line">	jsonValues, err := json.Marshal(values)</span><br><span class="line">	jsonValues = <span class="built_in">append</span>(jsonValues, <span class="string">&#x27;\n&#x27;</span>) <span class="comment">//每组数据后换行</span></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;转换为json出错&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	_, err = file.Write(jsonValues)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;写入错误&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.Parse()</span><br><span class="line">	<span class="keyword">if</span> infile != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;infile =&quot;</span>, *infile, <span class="string">&quot;outfile =&quot;</span>, *outfile, <span class="string">&quot;algorithm = &quot;</span>, *algorithm)</span><br><span class="line">	&#125;</span><br><span class="line">	values, err := readValues(*infile)</span><br><span class="line">	<span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;Read Values:&quot;</span>, values)</span><br><span class="line">		t1 := time.Now()</span><br><span class="line">		<span class="keyword">switch</span> *algorithm &#123;</span><br><span class="line">		<span class="keyword">case</span> <span class="string">&quot;qsort&quot;</span>:</span><br><span class="line">			qsort.Qsort(values, <span class="number">0</span>, <span class="built_in">len</span>(values)<span class="number">-1</span>)</span><br><span class="line">		<span class="keyword">case</span> <span class="string">&quot;bubblesort&quot;</span>:</span><br><span class="line">			bubblesort.BubbleSort(values)</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			fmt.Println(<span class="string">&quot;Error: Unsupported sorting algorithm&quot;</span>)</span><br><span class="line">			os.Exit(<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		t2 := time.Now()</span><br><span class="line"></span><br><span class="line">		fmt.Println(<span class="string">&quot;The Sorting costs&quot;</span>, t2.Sub(t1), <span class="string">&quot;to complete&quot;</span>)</span><br><span class="line"></span><br><span class="line">		writeValues(values, *outfile)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
-</ul>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2></li>
-</ul>
-<h2 id="Go协程与管道"><a href="#Go协程与管道" class="headerlink" title="Go协程与管道"></a>Go协程与管道</h2></li>
-<li><p>什么是并发？什么是并行</p>
-<ul>
-<li><strong>并发（Concurrency）</strong> 指的是一个系统能够同时处理多个任务或者同时处理多个事件。这并不意味着系统同时处理所有的任务，而是系统在多个任务之间快速切换，使得在宏观上给人的感觉是同时执行的。并发通常用于提高系统资源的利用率，提高响应速度和改善用户体验。在并发中，任务之间的执行顺序可能是不确定的，这取决于系统的调度算法。</li>
-<li><strong>并行（Parallelism）</strong> 指的是系统同时执行多个任务或者操作，实际上是多个处理器或者计算机核心同时执行不同的任务，这样可以加速程序的执行速度。并行通常需要硬件支持，例如多核处理器或者分布式系统。在并行中，不同的任务会在不同的处理单元上同时执行，各个任务之间是独立的，彼此之间不会干扰。</li>
-</ul>
-</li>
-<li><p>什么是进程？什么是线程？区别？线程安全是什么？</p>
-<ul>
-<li><strong>进程（Process）</strong> 是指在计算机中运行的程序的实例。每个进程都有自己的内存空间、代码、数据和系统资源，它们之间相互独立，互不干扰。每个进程都有自己的程序计数器（Program Counter）和堆栈（Stack），用于执行和管理程序的运行。进程之间的切换会消耗较多的系统资源，因此进程通常被用来执行较为独立的任务。</li>
-<li><strong>线程（Thread）</strong> 是在进程内部运行的轻量级的执行单元。一个进程可以包含多个线程，这些线程共享同一个进程的内存空间和系统资源。线程之间的切换相比进程更加轻量级，因为它们共享同一个地址空间。多线程的主要优势在于能够更有效地利用多核处理器，提高程序的并发性，加快程序的响应速度。</li>
-<li><strong>区别：</strong><ol>
-<li>进程是独立的程序执行实例，拥有自己的内存空间和系统资源；线程是进程内部的执行单元，共享同一进程的资源。	</li>
-<li>进程之间相互独立，互不干扰；线程之间共享同一进程的内存空间，可以方便地进行通信和数据共享。</li>
-<li>进程切换需要较多的系统资源，线程切换相对较轻量级，开销较小</li>
-</ol>
-</li>
-<li><strong>线程安全（Thread Safety）</strong> 是指当多个线程同时访问共享数据时，不会发生不可预料的结果。如果一个代码段在多线程环境下可以安全地执行，那么就是线程安全的。线程安全通常需要采取一些同步机制，比如<code>互斥锁（Mutex）</code>或者<code>信号量（Semaphore）</code>，来确保共享数据的一致性和正确性。线程安全的设计可以避免在多线程环境下出现数据竞争、死锁等问题，确保程序的稳定性和可靠性。</li>
-</ul>
-</li>
-<li><p>go语言协程的优点 </p>
-<ul>
-<li><strong>轻量级：</strong> Go语言的协程比传统的线程更加轻量级，一个协程的内存占用远远小于一个线程，因此可以在一个程序中创建大量的协程，而不会消耗过多的内存。</li>
-<li><strong>并发性高：</strong> 由于协程的轻量级特性，Go语言可以轻松创建数以千计甚至更多的协程，实现大规模并发处理，提高程序的并发性能。</li>
-<li><strong>简单易用：</strong> 在Go语言中，创建和管理协程非常简单，使用关键字<code>go</code>就可以启动一个新的协程，而不需要像传统的线程编程那样手动创建和管理线程。</li>
-<li><strong>自动管理：</strong> Go语言的运行时系统会自动在多个线程之间调度协程的执行，开发者无需手动干预，这样就避免了传统多线程编程中的锁、死锁等问题。</li>
-<li><strong>更好的利用多核处理器：</strong> Go语言的协程模型可以更好地利用多核处理器，通过在多个核心上并行运行协程，提高程序的处理能力。</li>
-<li><strong>避免回调地狱：</strong> 使用协程可以避免传统异步编程中的回调地狱（Callback Hell），使得异步编程更加简洁和可读。</li>
-<li><strong>内置的通信机制：</strong> Go语言提供了内置的通道（Channel）机制，可以方便地在协程之间进行通信和数据传递，实现协程间的同步和协作。</li>
-</ul>
-</li>
-<li><p>go语言channel是什么？有什么作用？</p>
-<ul>
-<li><ul>
-<li><strong>通道（Channel）</strong> 是一种用来在不同协程之间传递数据的机制。它是一种类型安全的、并发安全的数据结构，可以用来在协程之间传递数据，实现协程之间的通信和同步。</li>
-<li><strong>通道</strong>实际上是一个队列数据结构，先进先出</li>
-</ul>
-</li>
-<li><p><strong>通道的作用：</strong></p>
-<ol>
-<li><strong>协程之间的通信：</strong> 通道允许不同的协程之间安全地传递数据。一个协程可以将数据发送到通道，另一个协程可以从通道中接收数据。通道会自动处理发送和接收的同步，确保数据的安全传递。</li>
-<li><strong>协程之间的同步：</strong> 通道可以用于在协程之间进行同步操作。通常在一个协程中等待另一个协程的信号，直到接收到信号后再继续执行。通道可以用来实现这种同步机制，比如等待多个协程都完成某个任务后再执行下一步操作。</li>
-<li><strong>避免竞态条件：</strong> 通道可以用于避免多个协程访问共享资源时的竞态条件（Race Condition）问题。通过使用通道，可以确保每次只有一个协程可以访问共享资源，避免数据的不一致性。</li>
-<li><strong>控制协程的并发数：</strong> 通道可以用来限制并发协程的数量。通过控制通道的缓冲区大小，可以限制同时执行的协程数量，避免系统资源被过多的协程占用。</li>
-</ol>
-</li>
-</ul>
-</li>
-<li><p>什么是阻塞？如何使用channel实现阻塞？ </p>
-<ul>
-<li><p><strong>阻塞（Blocking）</strong> 是指一个操作或者线程被暂停，直到满足某个条件才能继续执行。在Go语言中，通常在使用通道（Channel）时会涉及到阻塞的概念。</p>
-<p>当在一个通道上进行发送操作（<code>channel &lt;- value</code>）时，如果通道已满，发送操作将被阻塞，直到有其他协程从通道中接收数据，腾出空间来，发送操作才能继续执行。同样，当在一个通道上进行接收操作（<code>value &lt;- channel</code>）时，如果通道为空，接收操作将被阻塞，直到有其他协程向通道中发送数据，接收操作才能继续执行。</p>
-</li>
-<li><pre><code class="go">package main
-
-import (
-    &quot;fmt&quot;
-    &quot;time&quot;
-)
-
-func main() &#123;
-    ch := make(chan int)
-
-    go func() &#123;
-        time.Sleep(time.Second * 10)
-        ch &lt;- 1
-    &#125;()
-
-    fmt.Println(&quot;Waiting for data...&quot;)
-    data := &lt;-ch
-    fmt.Println(&quot;Received data:&quot;, data)
-&#125;
-//这个例子就能很好地展现管道的阻塞总能，让主程序能在打印第一个waiting for data后阻塞
-//等待有元素进入管道
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- 通过goroutine模拟四个工人同时处理10个工作</span><br><span class="line"></span><br><span class="line">  - ```go</span><br><span class="line">    package main</span><br><span class="line">    </span><br><span class="line">    import (</span><br><span class="line">    	&quot;fmt&quot;</span><br><span class="line">    	&quot;time&quot;</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    func WorkerFunc(JobResultChan chan int, job chan int, num int, exitChan chan bool) &#123;</span><br><span class="line">    	defer func() &#123;</span><br><span class="line">    		if err := recover(); err != nil &#123;</span><br><span class="line">    			fmt.Println(&quot;发生错误&quot;)</span><br><span class="line">    		&#125;</span><br><span class="line">    	&#125;()</span><br><span class="line">    	for &#123;</span><br><span class="line">    		i, ok := &lt;-job</span><br><span class="line">    		if !ok &#123;</span><br><span class="line">    			break</span><br><span class="line">    		&#125;</span><br><span class="line">    		time.Sleep(time.Second * 1)</span><br><span class="line">    		fmt.Printf(&quot;第%d个工人完成了第%d份工作\n&quot;, num+1, i)</span><br><span class="line">    		JobResultChan &lt;- i</span><br><span class="line">    	&#125;</span><br><span class="line">    	exitChan &lt;- true</span><br><span class="line">    	fmt.Println(&quot;一个协程关闭&quot;)</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line">    func GetJob(job chan int) &#123;</span><br><span class="line">    	defer func() &#123;</span><br><span class="line">    		if err := recover(); err != nil &#123;</span><br><span class="line">    			fmt.Println(&quot;发生错误&quot;)</span><br><span class="line">    		&#125;</span><br><span class="line">    	&#125;()</span><br><span class="line">    	for i := 1; i &lt;= 10; i++ &#123;</span><br><span class="line">    		job &lt;- i</span><br><span class="line">    	&#125;</span><br><span class="line">    	close(job)//工作全放入管道后关闭管道，否则会死锁</span><br><span class="line">    &#125;</span><br><span class="line">    func main() &#123;</span><br><span class="line">    	job := make(chan int, 10)</span><br><span class="line">    	WorkerNum := 4</span><br><span class="line">    	exitChan := make(chan bool, WorkerNum)</span><br><span class="line">    	JobResultChan := make(chan int, 10)</span><br><span class="line">    	go GetJob(job)</span><br><span class="line">    	for i := 0; i &lt; WorkerNum; i++ &#123;</span><br><span class="line">    		go WorkerFunc(JobResultChan, job, i, exitChan)</span><br><span class="line">    	&#125;</span><br><span class="line">    	for i := 0; i &lt; 4; i++ &#123;</span><br><span class="line">    		&lt;-exitChan</span><br><span class="line">    	&#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-- 这个代码未使用sync，而用管道实现线程安全。
-- 代码执行顺序是初始化后启动GetJob线程和四个WorkerFunc线程，主线程阻塞在下面的for循环，其他线程执行结束后，主线程停止阻塞
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-
+<h1 id="Let‘s-Go"><a href="#Let‘s-Go" class="headerlink" title="Let‘s Go"></a>Let‘s Go</h1><blockquote>
+<p>大一曾经的工作室招新题go语言部分<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/08/02/Let%E2%80%98s%20Go/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -670,7 +347,7 @@ func main() &#123;
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-08-02 17:13:51" itemprop="dateModified" datetime="2024-08-02T17:13:51+08:00">2024-08-02</time>
+                <time title="修改时间：2025-07-15 18:14:40" itemprop="dateModified" datetime="2025-07-15T18:14:40+08:00">2025-07-15</time>
               </span>
 
           
@@ -685,285 +362,22 @@ func main() &#123;
 
       
           <hr>
-<h1 id="C语言基础"><a href="#C语言基础" class="headerlink" title="C语言基础"></a>C语言基础</h1><h2 id="1-A-B-problem"><a href="#1-A-B-problem" class="headerlink" title="1. A+B problem"></a>1. A+B problem</h2><ul>
+<h1 id="C语言基础"><a href="#C语言基础" class="headerlink" title="C语言基础"></a>C语言基础</h1><blockquote>
+<p>大一曾经的工作室招新题C语言部分</p>
+</blockquote>
+<h2 id="1-A-B-problem"><a href="#1-A-B-problem" class="headerlink" title="1. A+B problem"></a>1. A+B problem</h2><ul>
 <li><p>程序为什么要被编译后才能运行</p>
 <p>计算机无法直接理解或执行源代码，因为它包含了高级语言中的抽象概念，而计算机只能理解机器语言指令，即由二进制数字组成的指令代码。编译器是一种程序，负责将源代码转换为目标代码，这是一种特定计算机体系结构可以直接执行的代码。目标代码通常是二进制文件，它包含了程序的指令和数据，可以由计算机的处理器执行。</p>
 </li>
-<li><p><code>#include</code>是什么意思，为什么不实现<code>scanf</code>和<code>printf</code>就能使用，如何调用到的</p>
-<p><code>#include</code> 是一个预处理指令，用于将指定的文件内容包含到源代码中。它通常用来包含头文件（header files），头文件中包含了函数的声明、宏定义和数据结构等信息。预处理器会将指定的头文件内容插入到当前源代码文件的相应位置。这样，你就能够在代码中使用头文件中定义的函数和数据结构，而不必手动复制头文件的内容到每个源文件中。</p>
-<p><code>scanf()</code> 和 <code>printf()</code> 这两个函数，它们是C语言标准库<code>（Standard Library）</code>中定义的输入输出函数。标准库是一组预先编写好的函数，提供了各种常用的功能，包括输入输出、字符串处理、数学计算等。这些函数的定义和实现通常存储在标准库的头文件中，例如 <code>&lt;stdio.h&gt;</code></p>
-<p>通过 <code>#include &lt;stdio.h&gt;</code>，你可以在程序中包含标准输入输出函数的声明，这样编译器就知道这些函数的原型，而链接器会将它们与标准库中的实现链接在一起，使得你可以在程序中调用它们。</p>
-</li>
-<li><p><code>argc</code>,<code>agrv</code>分别是什么意思，编写代码实现倒序打印命令行输入参数的功能</p>
-<p>在C语言中，<code>argc</code> 和 <code>argv</code> 是命令行参数传递的一种方式。它们通常在程序的<code>main</code>函数中使用。</p>
-<ul>
-<li><code>argc</code>（argument count）表示命令行参数的数量，是一个整数。</li>
-<li><code>argv</code>（argument vector）是一个指针数组，其中每个元素是一个指向传递给程序的命令行参数的指针。</li>
 </ul>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = argc - <span class="number">1</span>; i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s &quot;</span>, argv[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;<span class="comment">//在命令行中输入:&quot;可执行文件路径 arg1 arg2 arg3 &quot;输出:&quot; arg3 arg2 arg1&quot;</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-<li><p>主函数也能是<code>void</code>吗 主函数返回值有什么意义</p>
-<p>主函数（<code>main</code>函数）的返回类型通常是<code>int</code>，表示该函数可以返回一个整数值。这个整数值通常用于指示程序的执行状态，返回给操作系统。一般约定，返回值为<code>0</code>表示程序成功执行，非零值（通常是其他整数）表示程序执行出现错误或异常终止。</p>
-<p>在一些特定的编译器中，你可以使用<code>void</code>作为<code>main</code>函数的返回类型。<code>void main()</code>并不是标准C语言的写法，不推荐使用。在标准C中，<code>main</code>函数的返回类型应该是<code>int</code>。</p>
-</li>
-<li><p><code>main</code>函数是程序的入口点（entry point），是程序执行的起始位置。当你运行一个C或C++程序时，操作系统会调用<code>main</code>函数来启动程序的执行。</p>
-<p><code>main</code>函数通常是第一个被调用的函数。程序的执行流程从<code>main</code>函数开始，然后按照在<code>main</code>函数内部的代码顺序依次执行。在<code>main</code>函数内部，你可以调用其他函数、定义变量、执行各种操作，控制程序的逻辑和流程。</p>
-<p>当<code>main</code>函数内部的所有代码执行完毕，程序会自动返回一个整数值（通常是<code>0</code>），表示程序的退出状态。在这个时候，<code>main</code>函数可以被认为是最后一个执行的函数。当<code>main</code>函数返回后，程序的执行结束，操作系统会收到程序的退出状态。</p>
-<p>在<code>main</code>函数之前，编译器和操作系统可能会进行一些初始化工作，例如初始化全局变量、分配内存等。在<code>main</code>函数之后，程序的资源会被释放，例如关闭文件、释放内存等。</p>
-</li>
-<li><p>&amp;符号是什么意思</p>
-<ul>
-<li><p><code>&amp;</code> 符号是”取地址运算符”。它用于获取变量的内存地址，即变量在计算机内存中的位置。当你使用 <code>&amp;</code> 符号后跟一个变量名时，它会返回该变量的地址。</p>
-</li>
-<li><p><code>&amp;</code> 符号还有一个常见的用法，它可以表示”按位与”运算。在这种情况下，<code>&amp;</code> 表示两个二进制数进行按位与运算，返回一个新的二进制数。</p>
-</li>
-</ul>
-<p>​       例如，对于整数 <code>a</code> 和 <code>b</code>，<code>a &amp; b</code> 执行按位与运算，即将 <code>a</code> 和 <code>b</code> 的二进制表示中对应位上的值进行与操作。如果两个对应位上的值都为 1，则结果的对应位为 1，否则为 0。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">5</span>; <span class="comment">// 二进制表示：0101</span></span><br><span class="line"><span class="type">int</span> b = <span class="number">3</span>; <span class="comment">// 二进制表示：0011</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> result = a &amp; b; <span class="comment">// 按位与运算结果：0001，即十进制的 1</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>c++中&amp;还能声明一个引用</li>
-</ul>
-</li>
-<li><p>实现一百位整数加法</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这里是用cpp写的</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line">using namespace <span class="built_in">std</span>; </span><br><span class="line"><span class="type">int</span> maxm=<span class="number">10001</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> numa[maxm]; <span class="type">int</span> numb[maxm];	<span class="type">int</span> leng_a,leng_b;  </span><br><span class="line">	<span class="built_in">string</span> a,b,temp;</span><br><span class="line">	<span class="built_in">cin</span>&gt;&gt;a&gt;&gt;b;</span><br><span class="line">	leng_a=a.length();leng_b=b.length();</span><br><span class="line">	<span class="keyword">if</span> (leng_a&lt;leng_b) </span><br><span class="line">	&#123;</span><br><span class="line">		temp=a;</span><br><span class="line">		a=b;</span><br><span class="line">		b=temp;</span><br><span class="line">		swap(leng_a,leng_b);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">0</span>;i&lt;leng_a;i++)  numa[i]=a[leng_a-i<span class="number">-1</span>]-<span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">0</span>;i&lt;leng_b;i++)  numb[i]=b[leng_b-i<span class="number">-1</span>]-<span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">	</span><br><span class="line">    <span class="type">int</span> l=max(leng_a,leng_b);</span><br><span class="line">	</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">0</span>;i&lt;l;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ((numa[i]+numb[i])&gt;=<span class="number">10</span>) </span><br><span class="line">		numa[i+<span class="number">1</span>]++;</span><br><span class="line">		numa[i]=(numa[i]+numb[i])%<span class="number">10</span>;</span><br><span class="line">	&#125;	</span><br><span class="line">	<span class="keyword">if</span>(numa[l]&gt;<span class="number">0</span>)  l=l+<span class="number">1</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i=l<span class="number">-1</span>;i&gt;=<span class="number">0</span>;i--)  <span class="built_in">cout</span>&lt;&lt;numa[i];</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="comment">//高精度加法a+b,例如输入99999999999999 1234567890 输出100001234567889</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>printf</code>为什么可以接受变长参数</p>
-<ul>
-<li><p><code>printf</code> 函数之所以能够接受不定数量的参数，是因为它是使用可变参数（variable arguments）实现的。在C语言中，可变参数的处理是通过 <code>&lt;stdarg.h&gt;</code> 头文件中的函数提供的。</p>
-<p>在<code>printf</code>函数中，格式字符串中的格式化占位符（例如 <code>%d</code>, <code>%s</code> 等）指定了应该接受的参数类型和数量。C语言的 <code>&lt;stdarg.h&gt;</code> 头文件提供了一组宏和函数，例如 <code>va_list</code>, <code>va_start</code>, <code>va_arg</code>, 和 <code>va_end</code>，用于处理可变参数的传递和访问。</p>
-<p>具体步骤如下：</p>
-<ol>
-<li><p><code>va_list</code> 类型用于存储可变参数的信息。</p>
-</li>
-<li><p><code>va_start</code> 宏初始化 <code>va_list</code> 对象，使其指向参数列表的第一个可变参数。</p>
-</li>
-<li><p><code>va_arg</code> 宏用于按照指定类型获取参数列表中的参数值。</p>
-</li>
-<li><p><code>va_end</code> 宏用于清理 <code>va_list</code> 对象。</p>
-</li>
-</ol>
-<p><code>printf</code> 函数内部使用了这些宏和函数，根据格式化字符串中的占位符，逐个获取传递给 <code>printf</code> 的参数值，然后按照格式化字符串的格式输出这些值。</p>
-<p>这种可变参数的处理机制使得 <code>printf</code> 可以接受不同数量和类型的参数，并且根据格式化字符串进行相应的处理。这样，你可以在使用 <code>printf</code> 函数时传递不同数量的参数，而 <code>printf</code> 函数会根据格式化字符串进行适当的格式化和输出。</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="2-计算机原理-int-2-Binary"><a href="#2-计算机原理-int-2-Binary" class="headerlink" title="2. 计算机原理 int 2 Binary"></a>2. 计算机原理 int 2 Binary</h2><ul>
-<li><p>整数在计算机中怎么储存</p>
-<p>以补码存储，其中正整数和<code>0</code>的原码补码反码都相等，负数反码为原码除符号位的0变1，1变0，补码为反码加1.</p>
-</li>
-<li><p>写出<code>0  99 -99</code>的二进制补码</p>
-<ul>
-<li><code>0</code>的补码为<code>00000000</code>，<code>99</code>的为<code>01100011</code>，<code>-99</code>的为<code>10011101</code>。</li>
-</ul>
-</li>
-<li><pre><code class="c">//实现一个函数
-#include&lt;stdio.h&gt;
-#include&lt;stdlib.h&gt;
-char *int2binary(int num)&#123;
-    char* p_str = (char*)malloc(8*sizeof(char));
-    for(int i=0;i&lt;8;i++)&#123;
-        p_str[i]=&#39;0&#39;;
-    &#125;
-    if(num&lt;0)&#123;
-        num=256+num;
-    &#125;
-    int i=0;
-    while(num&gt;0&amp;&amp;i&lt;8)&#123;
-        p_str[i]=(char)(num%2+48);
-        num=num/2;
-        i++;
-    &#125;
-    return p_str;
-&#125;
-int main()&#123;
-    int num;
-    char *p_str=NULL;
-    while(1)&#123;scanf(&quot;%d&quot;,&amp;num);
-    p_str=int2binary(num);
-    for (int i=8;i&gt;0;i--)&#123;
-        printf(&quot;%c&quot;,p_str[i-1]);
-    &#125;
-    &#125;
-return 0;
-&#125;
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- 小数在计算机的储存</span><br><span class="line"></span><br><span class="line">  整数位和小数位转化为二进制数后使用符号位，指数位，尾数位储存，可以写成</span><br><span class="line">  $$</span><br><span class="line">  num=(-1)^s\times1.b\times2^c</span><br><span class="line">  $$</span><br><span class="line">  其中`s`为符号位数，`b`为尾数，`c`为指数。例如`float`类型为1位符号位8位指数位，23位尾数位，且当指数位全为0或1时可以表示特殊值，例如无穷大或`0`或`NaN`.</span><br><span class="line"></span><br><span class="line">## 3. 文件</span><br><span class="line"></span><br><span class="line">- 什么是文件？什么是流？区别？</span><br><span class="line"></span><br><span class="line">  - 文件是对I/O设备的抽象，是字节序列，每个I/O设备都可以看成文件。(csapp)</span><br><span class="line"></span><br><span class="line">    文件是计算机上存储数据的一种方式，通常以命名的方式存储在存储设备（比如硬盘、固态硬盘、光盘等）上。文件可以包含文本、图像、音频、视频等各种类型的数据。每个文件都有一个唯一的文件名和文件路径，用于在文件系统中标识和定位文件。</span><br><span class="line"></span><br><span class="line">  - 流是一个抽象的概念，用于表示数据的序列，这些数据可以是字节、字符或其他类型的数据单元。流可以是输入流（用于读取数据）或输出流（用于写入数据）。流的主要目的是提供一种连续、有序的数据访问方式，而不需要事先知道数据的全部内容。</span><br><span class="line"></span><br><span class="line">  - 区别：</span><br><span class="line"></span><br><span class="line">1. **存储方式**：</span><br><span class="line"></span><br><span class="line">   - 文件是数据在存储设备上的持久化表示，以命名的方式存储。</span><br><span class="line"></span><br><span class="line">   - 流是对数据的抽象，表示数据的顺序传输，可以与各种数据源交互。</span><br><span class="line"></span><br><span class="line">2. **数据处理方式**：</span><br><span class="line"></span><br><span class="line">   - 文件通常需要一次性读取或写入。</span><br><span class="line">   - 流通常支持逐个或逐批次读取/写入，适合处理大量数据或网络通信等场景。</span><br><span class="line"></span><br><span class="line">3. **灵活性**：</span><br><span class="line"></span><br><span class="line">   - 流提供了更灵活的数据处理方式，可以逐个或逐批次处理数据，适用于各种场景。</span><br><span class="line">   - 文件通常用于存储和传输较大量的数据，对于逐个或逐批次处理数据较为麻烦。</span><br><span class="line"></span><br><span class="line">- 实现HaveAlookAt命令</span><br><span class="line"></span><br><span class="line">  ```c</span><br><span class="line">  #include &lt;stdio.h&gt;</span><br><span class="line">  int main(int argc,char *argv[]) &#123;</span><br><span class="line">      char ch;</span><br><span class="line">      FILE *file;</span><br><span class="line">      file = fopen(argv[1], &quot;r&quot;);</span><br><span class="line">      // 检查文件是否成功打开</span><br><span class="line">      if (file == NULL) &#123;</span><br><span class="line">          printf(&quot;无法打开文件 %s\n&quot;, argv[1]);</span><br><span class="line">          return 1;</span><br><span class="line">      &#125;</span><br><span class="line">      // 读取并显示文件内容</span><br><span class="line">      printf(&quot;文件内容:\n&quot;);</span><br><span class="line">      while ((ch = fgetc(file)) != EOF) &#123;</span><br><span class="line">          printf(&quot;%c&quot;, ch);</span><br><span class="line">      &#125;</span><br><span class="line">      // 关闭文件</span><br><span class="line">      fclose(file);</span><br><span class="line">      return 0;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-</code></pre>
-</li>
-<li><p>实现move to命令</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span> *argv[])</span> &#123;</span><br><span class="line">    <span class="type">char</span> source_path[] = argv[<span class="number">1</span>];</span><br><span class="line">    <span class="type">char</span> destination_path[] =argv[<span class="number">2</span>];</span><br><span class="line">    <span class="comment">// 将文件从源路径移动到目标路径</span></span><br><span class="line">    <span class="keyword">if</span> (rename(source_path, destination_path) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;文件移动成功。\n&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        perror(<span class="string">&quot;文件移动失败&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-<h2 id="4-循环链表"><a href="#4-循环链表" class="headerlink" title="4.  循环链表"></a>4.  循环链表</h2><ul>
-<li><pre><code class="c">#include&lt;stdio.h&gt;
-#include&lt;stdlib.h&gt;
-#include&lt;stdbool.h&gt;
-struct ListNode&#123;
-    int val;
-    bool pass_by;
-    struct ListNode *next;
-&#125;;
-
-struct ListNode *BuiltNode[10000];
-int BuiltNumber=-1;
-bool hasCycle(struct ListNode *head)&#123;
-    while(head-&gt;next!=NULL)&#123;
-        if(head-&gt;next-&gt;pass_by==true)
-            return true;
-        head-&gt;pass_by=true;
-        head=head-&gt;next;
-    &#125;
-    return false;
-&#125;
-
-struct ListNode *buildlist(struct ListNode *lastnode,struct ListNode *nextdir,int val)&#123;
-    struct ListNode *newnode=(struct ListNode*)malloc(sizeof(struct ListNode));
-    newnode-&gt;next=nextdir;
-    if(lastnode==NULL)&#123;
-        BuiltNumber++;
-        BuiltNode[BuiltNumber]=newnode;
-        printf(&quot;生成节点%d\n&quot;,BuiltNumber+1);
-        return newnode;
-    &#125;
-    if(val!=-1)
-        newnode-&gt;val=val;
-    newnode-&gt;pass_by=false;
-    lastnode-&gt;next=newnode;
-    BuiltNumber++;
-    BuiltNode[BuiltNumber]=newnode;
-    printf(&quot;生成节点%d\n&quot;,BuiltNumber+1);
-    return newnode;
-&#125;
-
-int main()&#123;
-    for(int i=0;i&lt;100;i++)&#123;
-        BuiltNode[i]=NULL;
-    &#125;
-    struct ListNode *head=NULL;
-    struct ListNode *lastnode=NULL;
-    int val;
-    scanf(&quot;%d&quot;,&amp;val);
-    head=buildlist(head,NULL,val);
-    lastnode=head;
-    for(int i=0;i&lt;9999;i++)&#123;
-        struct ListNode *nextdir=NULL;
-        int NextNodeNumber;
-        printf(&quot;请输入下一个节点的节点数和值\n&quot;);
-        scanf(&quot;%d%d&quot;,&amp;NextNodeNumber,&amp;val);
-        if(NextNodeNumber&gt;100)&#123;
-            printf(&quot;错误输入,请重新输入\n&quot;);
-            i--;
-            continue;
-        &#125;
-        nextdir=BuiltNode[NextNodeNumber-1];
-        lastnode=buildlist(lastnode,nextdir,-1);
-        if(nextdir!=NULL)&#123;
-            printf(&quot;找到了环,连接到了第%d个节点\n&quot;,NextNodeNumber);
-            break;
-        &#125;
-    &#125;
-    BuiltNumber=0;
-    bool flag=hasCycle(head);
-    printf(&quot;%d\n&quot;,flag);
-    return 0;
-&#125;
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">## 5. 结构化</span><br><span class="line"></span><br><span class="line">- ```c</span><br><span class="line">  #include&lt;stdio.h&gt;</span><br><span class="line">  #include&lt;stdlib.h&gt;</span><br><span class="line">  #define error 1000001</span><br><span class="line">  typedef int HumanWilling;</span><br><span class="line">  typedef int state;</span><br><span class="line">  enum openwilling&#123;Yes=-1,No,All&#125;;</span><br><span class="line">  enum lightstate&#123;open=0,shut&#125;;</span><br><span class="line">  struct Dorm</span><br><span class="line">  &#123;</span><br><span class="line">      HumanWilling DormMember[4];</span><br><span class="line">      state LightState;</span><br><span class="line">      struct Dorm *FrontDorm;</span><br><span class="line">      struct Dorm *NextDorm;</span><br><span class="line">      int DormNumber;</span><br><span class="line">      int Open_qua,Shut_qua; </span><br><span class="line">  &#125;;</span><br><span class="line">  struct Dorm *LastDorm=NULL;</span><br><span class="line">  </span><br><span class="line">  struct Dorm *SearchDir_dorm(int dormnumber)&#123;//查找宿舍号为dormnumber的宿舍并返回其地址</span><br><span class="line">      static struct Dorm* Justdir_dorm=NULL;//记录上一次访问的宿舍号从上次开始查找</span><br><span class="line">      struct Dorm *presentdorm;</span><br><span class="line">      if(Justdir_dorm!=NULL&amp;&amp;Justdir_dorm-&gt;DormNumber&gt;dormnumber)&#123;</span><br><span class="line">          presentdorm=Justdir_dorm;</span><br><span class="line">          while(presentdorm-&gt;FrontDorm!=NULL)&#123;</span><br><span class="line">              presentdorm=presentdorm-&gt;FrontDorm;</span><br><span class="line">              if(presentdorm-&gt;DormNumber==dormnumber)&#123;</span><br><span class="line">                  Justdir_dorm=presentdorm;</span><br><span class="line">                  return presentdorm;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      if(Justdir_dorm==NULL)</span><br><span class="line">      presentdorm=LastDorm;//第一次查询,从第一个含数据的节点开始</span><br><span class="line">      else if(Justdir_dorm-&gt;DormNumber&lt;=dormnumber)</span><br><span class="line">      presentdorm=Justdir_dorm;</span><br><span class="line">      do&#123;</span><br><span class="line">          if(presentdorm-&gt;DormNumber==dormnumber)&#123;</span><br><span class="line">              Justdir_dorm=presentdorm;</span><br><span class="line">              return presentdorm;</span><br><span class="line">          &#125;</span><br><span class="line">          presentdorm=presentdorm-&gt;NextDorm;</span><br><span class="line">          &#125;while(presentdorm!=NULL);</span><br><span class="line">      return NULL;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  void BuildDormList(int dormnumber,state lightstate)&#123;//建立宿舍的链表，新宿舍连接到最后一个宿舍后,宿舍号按升序排列</span><br><span class="line">      if(LastDorm-&gt;DormNumber&gt;=dormnumber||(lightstate!=0&amp;&amp;lightstate!=1))&#123;</span><br><span class="line">          printf(&quot;输入的宿舍参数有误,建立失败\n&quot;);</span><br><span class="line">          return;</span><br><span class="line">      &#125;</span><br><span class="line">      struct Dorm *nextdorm=(struct Dorm *)malloc(sizeof(struct Dorm));</span><br><span class="line">      nextdorm-&gt;DormNumber=dormnumber;</span><br><span class="line">      nextdorm-&gt;LightState=lightstate;</span><br><span class="line">      nextdorm-&gt;Open_qua=nextdorm-&gt;Shut_qua=0;</span><br><span class="line">      int willing;</span><br><span class="line">      for(int member=0;member&lt;4;member++)&#123;</span><br><span class="line">          while(1)&#123;</span><br><span class="line">              printf(&quot;输入第%d床的意愿,Yes:-1 No:0 All:1\n&quot;,member+1);</span><br><span class="line">              scanf(&quot;%d&quot;,&amp;willing);</span><br><span class="line">              if(willing&gt;1||willing&lt;-1)&#123;</span><br><span class="line">                  printf(&quot;请正确输入\n&quot;);</span><br><span class="line">                  continue;</span><br><span class="line">              &#125;</span><br><span class="line">              break;</span><br><span class="line">          &#125;</span><br><span class="line">          nextdorm-&gt;DormMember[member]=willing;</span><br><span class="line">      &#125;</span><br><span class="line">      LastDorm-&gt;NextDorm=nextdorm;</span><br><span class="line">      nextdorm-&gt;FrontDorm=LastDorm;</span><br><span class="line">      LastDorm=nextdorm;</span><br><span class="line">      LastDorm-&gt;NextDorm=NULL;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  HumanWilling CheckWilling(int member,struct Dorm *dir_dorm)&#123;//查询目标宿舍的目标成员的意愿</span><br><span class="line">      if(dir_dorm!=NULL)</span><br><span class="line">      return dir_dorm-&gt;DormMember[member];</span><br><span class="line">      return error;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  state CheckLightState(struct Dorm *dir_dorm)&#123;//查询目标宿舍的关灯状态</span><br><span class="line">      if(dir_dorm!=NULL)</span><br><span class="line">      return dir_dorm-&gt;LightState;</span><br><span class="line">      return error;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  int WriteIntoFile(struct Dorm *dir_dorm,int turn)&#123;//写入文件</span><br><span class="line">      FILE *file = fopen(&quot;D:\\test\\test100\\abcde.txt&quot;, &quot;a+&quot;);</span><br><span class="line">      if (file == NULL) &#123;</span><br><span class="line">          printf(&quot;无法打开文件。\n&quot;);</span><br><span class="line">          return error;</span><br><span class="line">      &#125;</span><br><span class="line">      for(int i=1;i&lt;=4;i++)&#123;</span><br><span class="line">          if(dir_dorm-&gt;DormMember[i-1]==Yes)</span><br><span class="line">          fprintf(file, &quot;%d宿舍的%d床的意愿为Yes\n&quot;,dir_dorm-&gt;DormNumber,i);</span><br><span class="line">          else if(dir_dorm-&gt;DormMember[i-1]==No)</span><br><span class="line">          fprintf(file, &quot;%d宿舍的%d床的意愿为No\n&quot;,dir_dorm-&gt;DormNumber,i);</span><br><span class="line">          else if(dir_dorm-&gt;DormMember[i-1]==All)</span><br><span class="line">          fprintf(file, &quot;%d宿舍的%d床的意愿为All\n&quot;,dir_dorm-&gt;DormNumber,i);</span><br><span class="line">      &#125;</span><br><span class="line">      if(turn==0)</span><br><span class="line">          fprintf(file,&quot;%d宿舍状态由开灯变成关灯\n&quot;,dir_dorm-&gt;DormNumber);</span><br><span class="line">      else if(turn==1)</span><br><span class="line">          fprintf(file,&quot;%d宿舍状态由关灯变成开灯\n&quot;,dir_dorm-&gt;DormNumber);</span><br><span class="line">      else</span><br><span class="line">          fprintf(file,&quot;宿舍状态不变\n&quot;);    </span><br><span class="line">      printf(&quot;数据已成功写入文件。\n&quot;);</span><br><span class="line">      return 0;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  void TurnLightState(struct Dorm *dir_dorm)&#123;//改变关灯状态并写入文件</span><br><span class="line">      if(dir_dorm!=NULL)&#123;</span><br><span class="line">          for(int i=0;i&lt;4;i++)&#123;</span><br><span class="line">              if(CheckWilling(i,dir_dorm)==Yes)</span><br><span class="line">              dir_dorm-&gt;Open_qua++;</span><br><span class="line">              if(CheckWilling(i,dir_dorm)==No)</span><br><span class="line">              dir_dorm-&gt;Shut_qua++;</span><br><span class="line">          &#125;//统计意愿</span><br><span class="line">          if(CheckLightState(dir_dorm)==open&amp;&amp;dir_dorm-&gt;Shut_qua&gt;=2)&#123;</span><br><span class="line">              dir_dorm-&gt;LightState=shut;</span><br><span class="line">              dir_dorm-&gt;Open_qua=dir_dorm-&gt;Shut_qua=0;</span><br><span class="line">              WriteIntoFile(dir_dorm,0);</span><br><span class="line">              return;</span><br><span class="line">          &#125;</span><br><span class="line">          if(CheckLightState(dir_dorm)==shut&amp;&amp;dir_dorm-&gt;Open_qua&gt;=3)&#123;</span><br><span class="line">              dir_dorm-&gt;LightState=open;</span><br><span class="line">              dir_dorm-&gt;Open_qua=dir_dorm-&gt;Shut_qua=0;</span><br><span class="line">              WriteIntoFile(dir_dorm,1);</span><br><span class="line">              return;</span><br><span class="line">          &#125;</span><br><span class="line">          WriteIntoFile(dir_dorm,-1);//改变状态并写入文件</span><br><span class="line">      return;</span><br><span class="line">      &#125;</span><br><span class="line">      printf(&quot;没有此宿舍\n&quot;);</span><br><span class="line">      return;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  int main()&#123;</span><br><span class="line">      struct Dorm* Dir_dorm=NULL;</span><br><span class="line">      struct Dorm *FirstDorm=NULL;//不存储真正的宿舍数据</span><br><span class="line">      FirstDorm=(struct Dorm *)malloc(sizeof(struct Dorm));</span><br><span class="line">      LastDorm=FirstDorm;</span><br><span class="line">      LastDorm-&gt;DormNumber=0;</span><br><span class="line">      int dormnumber,lightstate;</span><br><span class="line">      int i=0;</span><br><span class="line">      while(i&lt;3)&#123;</span><br><span class="line">          scanf(&quot;%d%d&quot;,&amp;dormnumber,&amp;lightstate);</span><br><span class="line">          BuildDormList(dormnumber,lightstate);</span><br><span class="line">          i++;</span><br><span class="line">      &#125;</span><br><span class="line">      LastDorm=FirstDorm-&gt;NextDorm;</span><br><span class="line">      LastDorm-&gt;FrontDorm=NULL;</span><br><span class="line">      free(FirstDorm);</span><br><span class="line">      i=0;</span><br><span class="line">      while(i&lt;3)&#123;</span><br><span class="line">          scanf(&quot;%d&quot;,&amp;dormnumber);</span><br><span class="line">          Dir_dorm=SearchDir_dorm(dormnumber);</span><br><span class="line">          TurnLightState(Dir_dorm);</span><br><span class="line">          i++;</span><br><span class="line">      &#125;//简单的测试，可以更改地更复杂</span><br><span class="line">      return 0;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-例如：输入:1 1 -1 -1 -1 -1 2 1 1 1 1 1 3 0 0 0 0 0
-
-​		得到的文件内容为：
-
-​		1宿舍的1床的意愿为Yes
-​		1宿舍的2床的意愿为Yes
-​		1宿舍的3床的意愿为Yes
-​		1宿舍的4床的意愿为Yes
-​		1宿舍状态由关灯变成开灯
-​		2宿舍的1床的意愿为All
-​		2宿舍的2床的意愿为All
-​		2宿舍的3床的意愿为All
-​		2宿舍的4床的意愿为All
-​		宿舍状态不变
-​		3宿舍的1床的意愿为No
-​		3宿舍的2床的意愿为No
-​		3宿舍的3床的意愿为No
-​		3宿舍的4床的意愿为No
-​		3宿舍状态由开灯变成关灯
-</code></pre>
-</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/10/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="残阳">
-      <meta itemprop="description" content="我的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Canyang Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/10/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-03-10 13:41:40" itemprop="dateCreated datePublished" datetime="2024-03-10T13:41:40+08:00">2024-03-10</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/03/10/C%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1044,7 +458,7 @@ int main()&#123;
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">3</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1103,6 +517,7 @@ int main()&#123;
   </div>
 
   
+  <script size="300" alpha="0.6" zIndex="-1" src="/lib/canvas-ribbon/canvas-ribbon.js"></script>
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
@@ -1118,6 +533,8 @@ int main()&#123;
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/canvas_lines.min.js"></script>
 
 
   
