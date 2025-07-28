@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="算法笔记(下) 本文我将继续补充上一篇文章还未完成的部分，包括常见的代码手撕、常见库函数等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法笔记(下)">
+<meta property="og:url" content="http://example.com/2025/07/28/algorithm2/index.html">
+<meta property="og:site_name" content="Canyang Blog">
+<meta property="og:description" content="算法笔记(下) 本文我将继续补充上一篇文章还未完成的部分，包括常见的代码手撕、常见库函数等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-07-28T12:00:00.000Z">
+<meta property="article:modified_time" content="2025-07-28T10:05:59.697Z">
+<meta property="article:author" content="残阳">
+<meta property="article:tag" content="Go">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/07/28/algorithm2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>算法笔记(下) | Canyang Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Canyang Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/home/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-book-open">
+
+    <a href="/" rel="section"><i class="fa fa-book-open fa-fw"></i>概览</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/07/28/algorithm2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="残阳">
+      <meta itemprop="description" content="我的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Canyang Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法笔记(下)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-07-28 20:00:00 / 修改时间：18:05:59" itemprop="dateCreated datePublished" datetime="2025-07-28T20:00:00+08:00">2025-07-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AE%97%E6%B3%95%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">算法笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="算法笔记-下"><a href="#算法笔记-下" class="headerlink" title="算法笔记(下)"></a>算法笔记(下)</h1><blockquote>
+<p>本文我将继续补充上一篇文章还未完成的部分，包括常见的代码手撕、常见库函数等。</p>
+</blockquote>
+<span id="more"></span>
+
+
+
+<h2 id="常见算法实现的手撕"><a href="#常见算法实现的手撕" class="headerlink" title="常见算法实现的手撕"></a>常见算法实现的手撕</h2><h3 id="一、快排"><a href="#一、快排" class="headerlink" title="一、快排"></a>一、快排</h3><h4 id="1-基础快排-二路快排"><a href="#1-基础快排-二路快排" class="headerlink" title="1.基础快排(二路快排)"></a>1.基础快排(二路快排)</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//基准值为arr[0]的快排</span></span><br><span class="line"><span class="comment">//缺陷：对有序或接近有序数组效率低（退化为 O (n²)）</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//写法1</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">qsort</span><span class="params">(arr []<span class="type">int</span>)</span></span> []<span class="type">int</span>&#123;</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(arr)&lt;<span class="number">2</span>&#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    pivot := arr[<span class="number">0</span>]</span><br><span class="line">    <span class="comment">//这个写法类似与归并排序的写法</span></span><br><span class="line">    <span class="comment">//但是没有原地修改数组，复杂度较高</span></span><br><span class="line">    <span class="comment">//而且创建新数组并没有对原切片的底层数组进行修改，需要显式赋值</span></span><br><span class="line">    left := []<span class="type">int</span>&#123;&#125;</span><br><span class="line">    right := []<span class="type">int</span>&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> i:=<span class="number">1</span>;i&lt;<span class="built_in">len</span>(arr);i++&#123;</span><br><span class="line">        <span class="keyword">if</span> arr[i]&lt;pivot&#123;</span><br><span class="line">            left = <span class="built_in">append</span>(left,arr[i])</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            right = <span class="built_in">append</span>(right,arr[i])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">append</span>(qsort(left),<span class="built_in">append</span>([]<span class="type">int</span>&#123;pivot&#125;,qsort(right)...)...)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//写法2</span></span><br><span class="line"><span class="comment">//原地修改数组</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">quickSortBasic</span><span class="params">(arr []<span class="type">int</span>, left <span class="type">int</span>, right <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> left &gt;= right &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	pivot := partition(arr, left, right)</span><br><span class="line">	quickSortBasic(arr, left, pivot<span class="number">-1</span>)</span><br><span class="line">	quickSortBasic(arr, pivot+<span class="number">1</span>, right)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">partition</span><span class="params">(arr []<span class="type">int</span>, left <span class="type">int</span>, right <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="comment">//取出最左元素作为基准值，留出空隙</span></span><br><span class="line">	pivot := arr[left]</span><br><span class="line">	<span class="keyword">for</span> left &lt; right &#123;</span><br><span class="line">		<span class="keyword">for</span> left &lt; right &amp;&amp; arr[right] &gt;= pivot &#123;</span><br><span class="line">			right--</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">//填补left空隙，留下right空隙</span></span><br><span class="line">		arr[left] = arr[right]</span><br><span class="line">		<span class="keyword">for</span> left &lt; right &amp;&amp; arr[left] &lt;= pivot &#123;</span><br><span class="line">			left++</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">//填补right空隙，留下left空隙</span></span><br><span class="line">		arr[right] = arr[left]</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//最后一个空隙填充基准值</span></span><br><span class="line">	arr[left] = pivot</span><br><span class="line">	<span class="keyword">return</span> left</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-随机基准值的快排"><a href="#2-随机基准值的快排" class="headerlink" title="2.随机基准值的快排"></a>2.随机基准值的快排</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//随机基准版</span></span><br><span class="line"><span class="comment">//平均时间复杂度稳定为 O (n log n)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">quickSortRandom</span><span class="params">(arr []<span class="type">int</span>, left <span class="type">int</span>, right <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> left &gt;= right &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	rand.Seed(time.Now().UnixNano())</span><br><span class="line">	index := rand.Intn(right-left+<span class="number">1</span>) + left</span><br><span class="line">	<span class="comment">//得到的基准值下标与最左元素交换位置，就可以复用上面的算法</span></span><br><span class="line">	arr[index], arr[left] = arr[left], arr[index]</span><br><span class="line">	pivot := partition(arr, left, right)</span><br><span class="line">	quickSortRandom(arr, left, pivot<span class="number">-1</span>)</span><br><span class="line">	quickSortRandom(arr, pivot+<span class="number">1</span>, right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-三路快排"><a href="#3-三路快排" class="headerlink" title="3.三路快排"></a>3.三路快排</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//由于数组中可能存在许多相等元素</span></span><br><span class="line"><span class="comment">//这些元素排序之后不需要再次参与下一轮排序</span></span><br><span class="line"><span class="comment">//三路快排即是加上等于区，无需再次排序</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">quickSortThreeWay</span><span class="params">(arr []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(arr) &lt; <span class="number">2</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	rand.Seed(time.Now().UnixNano())</span><br><span class="line">	threeWay(arr, <span class="number">0</span>, <span class="built_in">len</span>(arr)<span class="number">-1</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">threeWay</span><span class="params">(arr []<span class="type">int</span>, left <span class="type">int</span>, right <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> left &gt;= right &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	index := left + rand.Intn(right-left+<span class="number">1</span>)</span><br><span class="line">	arr[left], arr[index] = arr[index], arr[left]</span><br><span class="line">	pivot := arr[left]</span><br><span class="line">	<span class="comment">// 分区指针：lt（小于区右边界）、gt（大于区左边界）、i（当前遍历）</span></span><br><span class="line">	lt, gt, i := left, right, left+<span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> i &lt;= gt &#123;</span><br><span class="line">		<span class="keyword">if</span> arr[i] &lt; pivot &#123;</span><br><span class="line">			<span class="comment">// 当前元素小于基准，交换到小于区</span></span><br><span class="line">			arr[lt], arr[i] = arr[i], arr[lt]</span><br><span class="line">			lt++</span><br><span class="line">            <span class="comment">//这里递增是因为初值arr[lt]是基准值，大小关系已经确定，后续arr[lt]也都是已经处理过的，</span></span><br><span class="line">            <span class="comment">//而arr[gt]并没有处理过，需要不递增i进行检查</span></span><br><span class="line">			i++</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> arr[i] &gt; pivot &#123;</span><br><span class="line">			<span class="comment">// 当前元素大于基准，交换到大于区</span></span><br><span class="line">			arr[gt], arr[i] = arr[i], arr[gt]</span><br><span class="line">			gt--</span><br><span class="line">			<span class="comment">// 注意这里i不递增，因为交换过来的元素还没检查</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 当前元素等于基准，直接跳过</span></span><br><span class="line">			i++</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//[left,lt)和(gt,right]</span></span><br><span class="line">	threeWay(arr, left, lt<span class="number">-1</span>)</span><br><span class="line">	threeWay(arr, gt+<span class="number">1</span>, right)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="二、归并排序"><a href="#二、归并排序" class="headerlink" title="二、归并排序"></a>二、归并排序</h3><h4 id="1-基础递归的归并排序"><a href="#1-基础递归的归并排序" class="headerlink" title="1.基础递归的归并排序"></a>1.基础递归的归并排序</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//递归版</span></span><br><span class="line"><span class="comment">//先归再并</span></span><br><span class="line"><span class="comment">//这个同样不是在原切片上修改</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeSort</span><span class="params">(arr []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(arr) &lt; <span class="number">2</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> arr</span><br><span class="line">	&#125;</span><br><span class="line">	mid := <span class="built_in">len</span>(arr) / <span class="number">2</span></span><br><span class="line">    <span class="comment">//归</span></span><br><span class="line">	arr1 := mergeSort(arr[:mid])</span><br><span class="line">	arr2 := mergeSort(arr[mid:])</span><br><span class="line">    <span class="comment">//并</span></span><br><span class="line">	<span class="keyword">return</span> merge(arr1, arr2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">merge</span><span class="params">(arr1 []<span class="type">int</span>, arr2 []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	l, r := <span class="number">0</span>, <span class="number">0</span></span><br><span class="line">	res := []<span class="type">int</span>&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> l &lt; <span class="built_in">len</span>(arr1) &amp;&amp; r &lt; <span class="built_in">len</span>(arr2) &#123;</span><br><span class="line">		<span class="keyword">if</span> arr1[l] &lt; arr2[r] &#123;</span><br><span class="line">			res = <span class="built_in">append</span>(res, arr1[l])</span><br><span class="line">			l++</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			res = <span class="built_in">append</span>(res, arr2[r])</span><br><span class="line">			r++</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	res = <span class="built_in">append</span>(res, arr1[l:]...)</span><br><span class="line">	res = <span class="built_in">append</span>(res, arr2[r:]...)</span><br><span class="line">	<span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-迭代的归并排序"><a href="#2-迭代的归并排序" class="headerlink" title="2.迭代的归并排序"></a>2.迭代的归并排序</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//从数组长度等于1开始每次增长两倍</span></span><br><span class="line"><span class="comment">//这种写法修改了原切片，无需二次返回</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeSortIterative</span><span class="params">(nums []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	n := <span class="built_in">len</span>(nums)</span><br><span class="line">	<span class="keyword">if</span> n &lt;= <span class="number">1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 从子数组长度为1开始，逐步扩大到n</span></span><br><span class="line">	<span class="keyword">for</span> size := <span class="number">1</span>; size &lt; n; size *= <span class="number">2</span> &#123;</span><br><span class="line">		<span class="comment">// 每次合并两个相邻的子数组</span></span><br><span class="line">		<span class="keyword">for</span> left := <span class="number">0</span>; left &lt; n-size; left += <span class="number">2</span> * size &#123;</span><br><span class="line">			mid := left + size</span><br><span class="line">			right := mid + size</span><br><span class="line">			<span class="keyword">if</span> right &gt; n &#123;</span><br><span class="line">				right = n <span class="comment">// 处理右边界超出数组长度的情况</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 合并 [left, mid) 和 [mid, right)</span></span><br><span class="line">			merged := merge(nums[left:mid], nums[mid:right])</span><br><span class="line">			<span class="comment">// 将合并结果复制回原数组</span></span><br><span class="line">			<span class="built_in">copy</span>(nums[left:right], merged)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-基于链表的归并排序"><a href="#3-基于链表的归并排序" class="headerlink" title="3.基于链表的归并排序"></a>3.基于链表的归并排序</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ListNode <span class="keyword">struct</span>&#123;</span><br><span class="line">    Val <span class="type">int</span></span><br><span class="line">    Next *ListNode</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 对链表进行归并排序</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeSortList</span><span class="params">(head *ListNode)</span></span> *ListNode &#123;</span><br><span class="line">	<span class="keyword">if</span> head == <span class="literal">nil</span> || head.Next == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> head</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 找到链表中点（快慢指针法）</span></span><br><span class="line">	mid := findMiddle(head)</span><br><span class="line">	<span class="comment">// 拆分链表为两部分</span></span><br><span class="line">	rightHead := mid.Next</span><br><span class="line">	mid.Next = <span class="literal">nil</span> <span class="comment">// 切断链表</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 递归排序左右两部分</span></span><br><span class="line">	left := mergeSortList(head)</span><br><span class="line">	right := mergeSortList(rightHead)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 合并两个有序链表</span></span><br><span class="line">	<span class="keyword">return</span> mergeList(left, right)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查找链表的中点（慢指针最终指向中点前一个节点）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">findMiddle</span><span class="params">(head *ListNode)</span></span> *ListNode &#123;</span><br><span class="line">	<span class="comment">//这里第二个fast一定要用head.Next</span></span><br><span class="line">	slow, fast := head, head.Next</span><br><span class="line">	<span class="keyword">for</span> fast != <span class="literal">nil</span> &amp;&amp; fast.Next != <span class="literal">nil</span> &#123;</span><br><span class="line">		slow = slow.Next</span><br><span class="line">		fast = fast.Next.Next</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> slow</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 合并两个有序链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeList</span><span class="params">(l1, l2 *ListNode)</span></span> *ListNode &#123;</span><br><span class="line">	dummy := &amp;ListNode&#123;&#125;</span><br><span class="line">	cur := dummy</span><br><span class="line">	<span class="keyword">for</span> l1 != <span class="literal">nil</span> &amp;&amp; l2 != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> l1.Val &lt; l2.Val &#123;</span><br><span class="line">			cur.Next = l1</span><br><span class="line">			l1 = l1.Next</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			cur.Next = l2</span><br><span class="line">			l2 = l2.Next</span><br><span class="line">		&#125;</span><br><span class="line">		cur = cur.Next</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> l1 != <span class="literal">nil</span> &#123;</span><br><span class="line">		cur.Next = l1</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> l2 != <span class="literal">nil</span> &#123;</span><br><span class="line">		cur.Next = l2</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> dummy.Next</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-多路归并"><a href="#4-多路归并" class="headerlink" title="4.多路归并"></a>4.多路归并</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//多路归并是归并思想的扩展，用于将多个已排序的序列合并为一个有序序列。</span></span><br><span class="line"><span class="comment">//它在算法题中频繁出现（如合并 K 个有序链表 / 数组、外部排序、Top K 问题等），核心是通过高效选择当前最小元素来降低时间复杂度。</span></span><br><span class="line"><span class="comment">//典型应用场景</span></span><br><span class="line"><span class="comment">//1. 合并 K 个升序链表（LeetCode 23）</span></span><br><span class="line"><span class="comment">//与合并数组类似，区别在于元素存储在链表中，需通过 Next 指针移动。堆中存储链表节点，每次弹出最小值节点后，将其 Next 节点入堆（若存在）。</span></span><br><span class="line"><span class="comment">//2. 外部排序（大数据量排序）</span></span><br><span class="line"><span class="comment">//当数据量超过内存容量时，无法一次性加载排序：</span></span><br><span class="line"><span class="comment">//先分块：将数据分成 k 个小文件，分别加载到内存排序，得到 k 个有序小文件（子序列）。</span></span><br><span class="line"><span class="comment">//多路归并：用堆合并 k 个有序小文件，输出到最终文件。</span></span><br><span class="line"><span class="comment">//3. 查找第 K 小元素（多源有序数据）</span></span><br><span class="line"><span class="comment">//例如：从 k 个有序数组中找第 k 小的元素。无需完全合并，只需在多路归并过程中计数，取出第 k 个元素即可（提前终止）。</span></span><br><span class="line"><span class="comment">//4. 生成排序后的数据流</span></span><br><span class="line"><span class="comment">//如多个有序数据流（如日志、传感器数据），需实时输出整体有序的结果，用堆维护当前候选元素，每次输出最小值并补充新元素。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//1. 定义堆元素结构</span></span><br><span class="line"><span class="comment">//堆中需存储元素的值、所在数组的索引（用于定位子序列）、该数组内的元素索引（用于移动指针）：</span></span><br><span class="line"><span class="keyword">type</span> Item <span class="keyword">struct</span> &#123;</span><br><span class="line">    val    <span class="type">int</span> <span class="comment">// 元素值</span></span><br><span class="line">    arrIdx <span class="type">int</span> <span class="comment">// 所在数组的索引</span></span><br><span class="line">    elemIdx <span class="type">int</span> <span class="comment">// 该数组内的元素索引</span></span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="comment">//2. 实现堆接口</span></span><br><span class="line"><span class="comment">//Go 的 container/heap 包要求实现 heap.Interface 接口（Len(), Less(), Swap(), Push(), Pop()）：</span></span><br><span class="line"><span class="comment">// 定义小根堆（按 val 升序）</span></span><br><span class="line"><span class="keyword">type</span> MinHeap []Item</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h MinHeap)</span></span> Len() <span class="type">int</span>           &#123; <span class="keyword">return</span> <span class="built_in">len</span>(h) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h MinHeap)</span></span> Less(i, j <span class="type">int</span>) <span class="type">bool</span> &#123; <span class="keyword">return</span> h[i].val &lt; h[j].val &#125; <span class="comment">// 小根堆</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h MinHeap)</span></span> Swap(i, j <span class="type">int</span>)      &#123; h[i], h[j] = h[j], h[i] &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Push：向堆中添加元素（append到末尾，由heap包自动上浮调整）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *MinHeap)</span></span> Push(x <span class="keyword">interface</span>&#123;&#125;) &#123;</span><br><span class="line">    *h = <span class="built_in">append</span>(*h, x.(Item))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Pop：从堆顶移除元素（返回最后一个元素，由heap包自动下沉调整）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *MinHeap)</span></span> Pop() <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">    old := *h</span><br><span class="line">    n := <span class="built_in">len</span>(old)</span><br><span class="line">    x := old[n<span class="number">-1</span>]</span><br><span class="line">    *h = old[:n<span class="number">-1</span>]</span><br><span class="line">    <span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//3. 多路归并核心逻辑</span></span><br><span class="line"><span class="comment">// 合并 k 个有序数组（每个数组均为升序）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeKArrays</span><span class="params">(arrays [][]<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">    k := <span class="built_in">len</span>(arrays)</span><br><span class="line">    <span class="keyword">if</span> k == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化小根堆</span></span><br><span class="line">    h := &amp;MinHeap&#123;&#125;</span><br><span class="line">    heap.Init(h)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 第一步：将每个数组的第一个元素入堆（若数组非空）</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; k; i++ &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(arrays[i]) &gt; <span class="number">0</span> &#123;</span><br><span class="line">            heap.Push(h, Item&#123;</span><br><span class="line">                val:    arrays[i][<span class="number">0</span>],</span><br><span class="line">                arrIdx: i,</span><br><span class="line">                elemIdx: <span class="number">0</span>,</span><br><span class="line">            &#125;)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 第二步：循环取堆顶（最小值），并补充下一个元素</span></span><br><span class="line">    <span class="keyword">var</span> result []<span class="type">int</span></span><br><span class="line">    <span class="keyword">for</span> h.Len() &gt; <span class="number">0</span> &#123;</span><br><span class="line">        <span class="comment">// 取出当前最小值</span></span><br><span class="line">        item := heap.Pop(h).(Item)</span><br><span class="line">        result = <span class="built_in">append</span>(result, item.val)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 若当前数组还有下一个元素，入堆</span></span><br><span class="line">        nextElemIdx := item.elemIdx + <span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> nextElemIdx &lt; <span class="built_in">len</span>(arrays[item.arrIdx]) &#123;</span><br><span class="line">            heap.Push(h, Item&#123;</span><br><span class="line">                val:    arrays[item.arrIdx][nextElemIdx],</span><br><span class="line">                arrIdx: item.arrIdx,</span><br><span class="line">                elemIdx: nextElemIdx,</span><br><span class="line">            &#125;)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//leetcode23</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeKLists</span><span class="params">(lists []*ListNode)</span></span> *ListNode &#123;</span><br><span class="line">    h := hp&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> _, head := <span class="keyword">range</span> lists &#123;</span><br><span class="line">        <span class="keyword">if</span> head != <span class="literal">nil</span> &#123;</span><br><span class="line">            h = <span class="built_in">append</span>(h, head) <span class="comment">// 把所有非空链表的头节点入堆</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    heap.Init(&amp;h) <span class="comment">// 堆化</span></span><br><span class="line"></span><br><span class="line">    dummy := &amp;ListNode&#123;&#125;</span><br><span class="line">    cur := dummy</span><br><span class="line">    <span class="keyword">for</span> <span class="built_in">len</span>(h) &gt; <span class="number">0</span> &#123; <span class="comment">// 循环直到堆为空</span></span><br><span class="line">        node := heap.Pop(&amp;h).(*ListNode) <span class="comment">// 剩余节点中的最小节点</span></span><br><span class="line">        <span class="keyword">if</span> node.Next != <span class="literal">nil</span> &#123; <span class="comment">// 下一个节点不为空</span></span><br><span class="line">            heap.Push(&amp;h, node.Next) <span class="comment">// 下一个节点有可能是最小节点，入堆</span></span><br><span class="line">        &#125;</span><br><span class="line">        cur.Next = node <span class="comment">// 把 node 添加到新链表的末尾</span></span><br><span class="line">        cur = cur.Next <span class="comment">// 准备合并下一个节点</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> dummy.Next</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> hp []*ListNode</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h hp)</span></span> Len() <span class="type">int</span>           &#123; <span class="keyword">return</span> <span class="built_in">len</span>(h) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h hp)</span></span> Less(i, j <span class="type">int</span>) <span class="type">bool</span> &#123; <span class="keyword">return</span> h[i].Val &lt; h[j].Val &#125; <span class="comment">// 最小堆</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h hp)</span></span> Swap(i, j <span class="type">int</span>)      &#123; h[i], h[j] = h[j], h[i] &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *hp)</span></span> Push(v any)        &#123; *h = <span class="built_in">append</span>(*h, v.(*ListNode)) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *hp)</span></span> Pop() any          &#123; a := *h; v := a[<span class="built_in">len</span>(a)<span class="number">-1</span>]; *h = a[:<span class="built_in">len</span>(a)<span class="number">-1</span>]; <span class="keyword">return</span> v &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="三、堆排序"><a href="#三、堆排序" class="headerlink" title="三、堆排序"></a>三、堆排序</h3><h4 id="1-递归版堆排序"><a href="#1-递归版堆排序" class="headerlink" title="1.递归版堆排序"></a>1.递归版堆排序</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//堆排序的核心就是实现大顶堆，然后不断去除堆顶元素放到队尾，然后调整堆结构</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">heapSort</span><span class="params">(arr []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	n := <span class="built_in">len</span>(arr)</span><br><span class="line">	<span class="keyword">if</span> n &lt;= <span class="number">1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//建堆，从最后一个个非叶子节点开始</span></span><br><span class="line">	<span class="keyword">for</span> i := n/<span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i-- &#123;</span><br><span class="line">		down(arr, i, n)</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//取堆顶元素放到末尾并调整</span></span><br><span class="line">	<span class="keyword">for</span> i := n - <span class="number">1</span>; i &gt; <span class="number">0</span>; i-- &#123;</span><br><span class="line">		arr[<span class="number">0</span>], arr[i] = arr[i], arr[<span class="number">0</span>]</span><br><span class="line">		down(arr, <span class="number">0</span>, i)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">down</span><span class="params">(arr []<span class="type">int</span>, i <span class="type">int</span>, n <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	lastIndex := i</span><br><span class="line">	<span class="keyword">if</span> i*<span class="number">2</span>+<span class="number">1</span> &lt; n &amp;&amp; arr[i*<span class="number">2</span>+<span class="number">1</span>] &gt; arr[i] &#123;</span><br><span class="line">		lastIndex = i*<span class="number">2</span> + <span class="number">1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> i*<span class="number">2</span>+<span class="number">2</span> &lt; n &amp;&amp; arr[i*<span class="number">2</span>+<span class="number">2</span>] &gt; arr[i] &#123;</span><br><span class="line">		lastIndex = i*<span class="number">2</span> + <span class="number">2</span></span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//需要下沉</span></span><br><span class="line">	<span class="keyword">if</span> lastIndex != i &#123;</span><br><span class="line">		arr[i], arr[lastIndex] = arr[lastIndex], arr[i]</span><br><span class="line">        <span class="comment">//继续调整</span></span><br><span class="line">		down(arr, lastIndex, n)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-迭代版堆排序"><a href="#2-迭代版堆排序" class="headerlink" title="2.迭代版堆排序"></a>2.迭代版堆排序</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 2. 优化版堆排序（迭代实现下沉，减少递归开销）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">heapSortOptimized</span><span class="params">(nums []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	n := <span class="built_in">len</span>(nums)</span><br><span class="line">	<span class="keyword">if</span> n &lt;= <span class="number">1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 1. 构建大顶堆（迭代方式下沉）</span></span><br><span class="line">	<span class="keyword">for</span> i := n/<span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i-- &#123;</span><br><span class="line">		sinkOptimized(nums, n, i)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 2. 提取堆顶元素并调整堆</span></span><br><span class="line">	<span class="keyword">for</span> i := n - <span class="number">1</span>; i &gt; <span class="number">0</span>; i-- &#123;</span><br><span class="line">		nums[<span class="number">0</span>], nums[i] = nums[i], nums[<span class="number">0</span>]</span><br><span class="line">		sinkOptimized(nums, i, <span class="number">0</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 优化版下沉操作（迭代实现，避免递归栈开销）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sinkOptimized</span><span class="params">(nums []<span class="type">int</span>, size, i <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		left := <span class="number">2</span>*i + <span class="number">1</span></span><br><span class="line">		right := <span class="number">2</span>*i + <span class="number">2</span></span><br><span class="line">		maxIdx := i</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> left &lt; size &amp;&amp; nums[left] &gt; nums[maxIdx] &#123;</span><br><span class="line">			maxIdx = left</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> right &lt; size &amp;&amp; nums[right] &gt; nums[maxIdx] &#123;</span><br><span class="line">			maxIdx = right</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> maxIdx == i &#123;</span><br><span class="line">			<span class="keyword">break</span> <span class="comment">// 无需下沉，退出循环</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		nums[i], nums[maxIdx] = nums[maxIdx], nums[i]</span><br><span class="line">		i = maxIdx <span class="comment">// 继续下沉子节点</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="常见库函数"><a href="#常见库函数" class="headerlink" title="常见库函数"></a>常见库函数</h2><h3 id="一、sort-包（排序相关）"><a href="#一、sort-包（排序相关）" class="headerlink" title="一、sort 包（排序相关）"></a>一、<code>sort</code> 包（排序相关）</h3> <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//sort.Ints(a []int)：对整数切片升序排序（直接修改原切片）。</span></span><br><span class="line">sort.Ints(a []<span class="type">int</span>)</span><br><span class="line">nums := []<span class="type">int</span>&#123;<span class="number">3</span>, <span class="number">1</span>, <span class="number">2</span>&#125;</span><br><span class="line">sort.Ints(nums) <span class="comment">// nums 变为 [1,2,3]</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//sort.Slice(a interface&#123;&#125;, less func(i, j int) bool)：自定义排序（适用于任何类型切片）。</span></span><br><span class="line">sort.Slice(a <span class="keyword">interface</span>&#123;&#125;, less <span class="function"><span class="keyword">func</span><span class="params">(i, j <span class="type">int</span>)</span></span> <span class="type">bool</span>)</span><br><span class="line"><span class="comment">// 对二维切片按第一元素升序、第二元素降序排序</span></span><br><span class="line">sort.Slice(matrix, <span class="function"><span class="keyword">func</span><span class="params">(i, j <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> matrix[i][<span class="number">0</span>] == matrix[j][<span class="number">0</span>] &#123;</span><br><span class="line">        <span class="keyword">return</span> matrix[i][<span class="number">1</span>] &gt; matrix[j][<span class="number">1</span>]</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> matrix[i][<span class="number">0</span>] &lt; matrix[j][<span class="number">0</span>]</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+ <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//sort.Search(n int, f func(int) bool)：二分查找（返回第一个满足 f(i)=true 的索引，适用于有序切片）。</span></span><br><span class="line">sort.Search(n <span class="type">int</span>, f <span class="function"><span class="keyword">func</span><span class="params">(<span class="type">int</span>)</span></span> <span class="type">bool</span>)</span><br><span class="line"><span class="comment">//在有序切片中查找第一个 &gt;= 5 的元素索引</span></span><br><span class="line">nums := []<span class="type">int</span>&#123;<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">7</span>&#125;</span><br><span class="line">idx := sort.Search(<span class="built_in">len</span>(nums), <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123; <span class="keyword">return</span> nums[i] &gt;=<span class="number">5</span> &#125;) <span class="comment">// idx=2</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="二、字符串操作"><a href="#二、字符串操作" class="headerlink" title="二、字符串操作"></a>二、字符串操作</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//strings 包</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//strings.Split(s, sep string) []string：按分隔符切割字符串。</span></span><br><span class="line">parts := strings.Split(<span class="string">&quot;a,b,c&quot;</span>, <span class="string">&quot;,&quot;</span>) <span class="comment">// [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span></span><br><span class="line"></span><br><span class="line">strings.Fields(s <span class="type">string</span>) []<span class="type">string</span><span class="comment">//按空格分割字符串</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//strings.Join(parts []string, sep string) string：拼接字符串切片。</span></span><br><span class="line">s := strings.Join([]<span class="type">string</span>&#123;<span class="string">&quot;a&quot;</span>,<span class="string">&quot;b&quot;</span>&#125;, <span class="string">&quot;-&quot;</span>) <span class="comment">// &quot;a-b&quot;</span></span><br><span class="line"></span><br><span class="line">strings.Contains(s, substr <span class="type">string</span>) <span class="type">bool</span><span class="comment">//判断是否包含子串。</span></span><br><span class="line"></span><br><span class="line">strings.Index(s, substr <span class="type">string</span>) <span class="type">int</span><span class="comment">//查找子串首次出现的索引（-1 表示不存在）。</span></span><br><span class="line"></span><br><span class="line">strings.Repeat(s, n <span class="type">int</span>) <span class="type">string</span><span class="comment">//重复字符串 n 次。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//strconv 包（字符串与基本类型转换）</span></span><br><span class="line"></span><br><span class="line">strconv.Atoi(s <span class="type">string</span>) (<span class="type">int</span>, <span class="type">error</span>)<span class="comment">//字符串转整数。</span></span><br><span class="line"></span><br><span class="line">strconv.Itoa(i <span class="type">int</span>) <span class="type">string</span><span class="comment">//整数转字符串。</span></span><br><span class="line"></span><br><span class="line">strconv.ParseInt(s <span class="type">string</span>, base <span class="type">int</span>, bitSize <span class="type">int</span>) (<span class="type">int64</span>, <span class="type">error</span>)<span class="comment">//解析指定进制的整数。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="三、math包"><a href="#三、math包" class="headerlink" title="三、math包"></a>三、<code>math</code>包</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1.常量定义</span></span><br><span class="line"><span class="comment">//math.MaxInt：当前系统 int 类型的最大值（如 64 位系统为 9223372036854775807）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.MinInt：当前系统 int 类型的最小值（如 64 位系统为 -9223372036854775808）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.MaxInt32：32 位整数最大值（2147483647），常用于限制数组大小或坐标范围。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.MinInt32：32 位整数最小值（-2147483648）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.Pi：圆周率（3.141592653589793），几何类题目常用。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.Abs(x float64) float64 求绝对值函数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//2.取整函数：</span></span><br><span class="line"><span class="comment">//math.Floor(x float64) float64：向下取整（如 Floor(2.8) = 2）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.Ceil(x float64) float64：向上取整（如 Ceil(2.1) = 3）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.Round(x float64) float64：四舍五入（如 Round(2.5) = 3）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//应用：计算中位数、处理除法取整（如 (a + b - 1) / b 等价于 Ceil(a/b)）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//3.幂运算与开方</span></span><br><span class="line"><span class="comment">//math.Pow(x, y float64) float64：计算 x^y（如 Pow(2, 3) = 8）。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//math.Sqrt(x float64) float64：计算平方根（如 Sqrt(16) = 4）。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="四、rand包"><a href="#四、rand包" class="headerlink" title="四、rand包"></a>四、<code>rand</code>包</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 初始化种子（建议在 main 函数或程序启动时执行一次）</span></span><br><span class="line">rand.Seed(time.Now().UnixNano()) <span class="comment">// 以当前纳秒时间为种子</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//生成 [0, n) 范围内的整数：rand.Intn(n int) int</span></span><br><span class="line"><span class="comment">//最常用的函数，如生成 [0, 10) 的随机整数：</span></span><br><span class="line">fmt.Println(rand.Intn(<span class="number">10</span>)) <span class="comment">// 可能输出 0-9 中的任意整数</span></span><br><span class="line"><span class="comment">//算法题中的典型应用</span></span><br><span class="line"><span class="comment">//随机快排的基准选择：避免有序数组退化，确保平均复杂度 O (n log n)：</span></span><br><span class="line"><span class="comment">// 在 [left, right] 范围内随机选择一个索引</span></span><br><span class="line">pivotIdx := left + rand.Intn(right - left + <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">//rand.Float64()：生成 [0.0, 1.0) 范围内的浮点数。</span></span><br><span class="line"><span class="comment">//扩展到 [a, b) 范围：a + rand.Float64() * (b - a)。</span></span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"># Go</a>
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/07/26/algorithm/" rel="prev" title="算法笔记">
+      <i class="fa fa-chevron-left"></i> 算法笔记
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E7%AC%94%E8%AE%B0-%E4%B8%8B"><span class="nav-number">1.</span> <span class="nav-text">算法笔记(下)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0%E7%9A%84%E6%89%8B%E6%92%95"><span class="nav-number">1.1.</span> <span class="nav-text">常见算法实现的手撕</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%BF%AB%E6%8E%92"><span class="nav-number">1.1.1.</span> <span class="nav-text">一、快排</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%9F%BA%E7%A1%80%E5%BF%AB%E6%8E%92-%E4%BA%8C%E8%B7%AF%E5%BF%AB%E6%8E%92"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">1.基础快排(二路快排)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E9%9A%8F%E6%9C%BA%E5%9F%BA%E5%87%86%E5%80%BC%E7%9A%84%E5%BF%AB%E6%8E%92"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">2.随机基准值的快排</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E4%B8%89%E8%B7%AF%E5%BF%AB%E6%8E%92"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">3.三路快排</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.2.</span> <span class="nav-text">二、归并排序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%9F%BA%E7%A1%80%E9%80%92%E5%BD%92%E7%9A%84%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">1.基础递归的归并排序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E8%BF%AD%E4%BB%A3%E7%9A%84%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">2.迭代的归并排序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%9F%BA%E4%BA%8E%E9%93%BE%E8%A1%A8%E7%9A%84%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">3.基于链表的归并排序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%A4%9A%E8%B7%AF%E5%BD%92%E5%B9%B6"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">4.多路归并</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%A0%86%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.3.</span> <span class="nav-text">三、堆排序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E9%80%92%E5%BD%92%E7%89%88%E5%A0%86%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">1.递归版堆排序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E8%BF%AD%E4%BB%A3%E7%89%88%E5%A0%86%E6%8E%92%E5%BA%8F"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">2.迭代版堆排序</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E5%BA%93%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.</span> <span class="nav-text">常见库函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81sort-%E5%8C%85%EF%BC%88%E6%8E%92%E5%BA%8F%E7%9B%B8%E5%85%B3%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">一、sort 包（排序相关）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%93%8D%E4%BD%9C"><span class="nav-number">1.2.2.</span> <span class="nav-text">二、字符串操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81math%E5%8C%85"><span class="nav-number">1.2.3.</span> <span class="nav-text">三、math包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81rand%E5%8C%85"><span class="nav-number">1.2.4.</span> <span class="nav-text">四、rand包</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">残阳</p>
+  <div class="site-description" itemprop="description">我的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">残阳</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="/lib/canvas-ribbon/canvas-ribbon.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/canvas_lines.min.js"></script>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
